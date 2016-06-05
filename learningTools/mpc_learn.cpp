@@ -289,7 +289,7 @@ void CulclationMpcValue()
 	cpuConfig.tableFlag = TRUE;
 	cpuConfig.winLossDepth = 0;
 
-	for (i = 5; i < 22; i++) {
+	for (i = 0; i < 22; i++) {
 		num = 0;
 		mean = 0;
 		var = 0;

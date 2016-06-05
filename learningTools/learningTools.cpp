@@ -1623,7 +1623,7 @@ int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 			write_corner5_2(&keyIndex[offset + 30], board);
 			write_corner3_3(&keyIndex[offset + 38], board);
 			write_triangle(&keyIndex[offset + 42], board);
-
+#if 0
 			UINT32 bk_mob, wh_mob;
 			CreateMoves(bk, wh, &bk_mob);
 			CreateMoves(wh, bk, &wh_mob);
@@ -1631,8 +1631,8 @@ int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 			SHORT mob = bk_mob;
 			keyIndex[offset + 46] = (USHORT)mob;
 			mobcnt[bk_mob]++;
-
-			write_parity(&keyIndex[offset + 47], ~(bk | wh));
+#endif
+			write_parity(&keyIndex[offset + 46], ~(bk | wh));
 			offset += PATTERN_NUM;
 		}
 
@@ -2269,9 +2269,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	BOOL result;
 
 	result = AlocMobilityFunc();
-	//culcEval();
+	culcEval();
 
-	CulclationMpcValue();
+	//CulclationMpcValue();
 
 	return 0;
 }
