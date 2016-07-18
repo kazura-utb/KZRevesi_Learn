@@ -18,6 +18,9 @@
 #define INDEX_NUM 6561
 #define MOBILITY_NUM 1
 #define PARITY_NUM 16
+// 範囲外の点数
+#define INF_SCORE 127
+
 
 extern UINT8 posEval[64];
 extern INT32 g_evaluation;
@@ -94,22 +97,9 @@ extern UINT64 h6;			/* h6 */
 extern UINT64 h7;			/* h7 */
 extern UINT64 h8;			/* h8 */
 
-/* 評価パターンテーブル(おおもと) */
-extern double hori_ver1_data[60][INDEX_NUM];
-extern double hori_ver2_data[60][INDEX_NUM];
-extern double hori_ver3_data[60][INDEX_NUM];
-extern double dia_ver1_data[60][INDEX_NUM];
-extern double dia_ver2_data[60][INDEX_NUM / 3];
-extern double dia_ver3_data[60][INDEX_NUM / 9];
-extern double dia_ver4_data[60][INDEX_NUM / 27];
-extern double edge_data[60][INDEX_NUM * 9];
-extern double corner5_2_data[60][INDEX_NUM * 9];
-extern double corner3_3_data[60][INDEX_NUM * 3];
-extern double triangle_data[60][INDEX_NUM * 9];
-extern double mobility_data[60][MOBILITY_NUM];
-extern double parity_data[60][PARITY_NUM];
+extern double eval_sum;
 
-/* 評価パターンテーブル */
+/* 評価パターンテーブル(現在のステージにより内容が変わるポインタ) */
 extern double *hori_ver1;
 extern double *hori_ver2;
 extern double *hori_ver3;
@@ -123,6 +113,23 @@ extern double *corner3_3;
 extern double *triangle;
 extern double *mobility;
 extern double *parity;
+
+/* 評価パターンテーブル(おおもと) */
+extern double hori_ver1_data[2][60][INDEX_NUM];
+extern double hori_ver2_data[2][60][INDEX_NUM];
+extern double hori_ver3_data[2][60][INDEX_NUM];
+extern double dia_ver1_data[2][60][INDEX_NUM];
+extern double dia_ver2_data[2][60][INDEX_NUM / 3];
+extern double dia_ver3_data[2][60][INDEX_NUM / 9];
+extern double dia_ver4_data[2][60][INDEX_NUM / 27];
+extern double edge_data[2][60][INDEX_NUM * 9];
+extern double corner5_2_data[2][60][INDEX_NUM * 9];
+extern double corner3_3_data[2][60][INDEX_NUM * 3];
+extern double triangle_data[2][60][INDEX_NUM * 9];
+extern double mobility_data[2][60][MOBILITY_NUM];
+extern double parity_data[2][60][PARITY_NUM];
+extern double constant_data[2][60];
+
 
 INT32 Evaluation(UINT8 *board, UINT64 b_board, UINT64 w_board, UINT32 color, UINT32 stage);
 BOOL LoadData(void);

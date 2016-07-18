@@ -84,6 +84,7 @@
     <ClInclude Include="bit64.h" />
     <ClInclude Include="board.h" />
     <ClInclude Include="book.h" />
+    <ClInclude Include="count_last_flip_carry_64.h" />
     <ClInclude Include="cpu.h" />
     <ClInclude Include="eval.h" />
     <ClInclude Include="fio.h" />
@@ -99,9 +100,11 @@
     <ClInclude Include="type.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ai_core.cpp" />
     <ClCompile Include="bit64.cpp" />
     <ClCompile Include="board.cpp" />
     <ClCompile Include="book.cpp" />
+    <ClCompile Include="count_last_flip_carry_32.cpp" />
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="eval.cpp" />
     <ClCompile Include="fio.cpp" />

@@ -14,7 +14,8 @@
 #include "cpu.h"
 #include "move.h"
 #include "hash.h"
-#include "GetPattern.h"
+
+#define GAME_COUNT 1000
 
 int MPC_INFO_NUM = 0;
 int END_MPC_INFO_NUM = 0;
@@ -157,7 +158,7 @@ void getKifuLine(char buf[][512])
 		return;
 	}
 
-	while (i < 500 && fgets(line, 512, rfp) != NULL)
+	while (i < GAME_COUNT && fgets(line, 512, rfp) != NULL)
 	{
 		if (line[121] != ' ')
 		{
@@ -203,7 +204,13 @@ void read_mpc_info(MPCINFO *mpc_info, int info_num, char *file_name){
 	//sprintf_s(filename, 32, "src\\mpc%02d.dat", i);
 	sprintf_s(filename, 32, file_name);
 	if (fopen_s(&fp, filename, "r")){
-		printf("mpc.dat を開けません。\n");
+		printf("mpc.dat が存在しません。作成します。\n");
+		if (fopen_s(&fp, filename, "w"))
+		{
+			printf("mpc.dat が作成出来ません。終了します。\n");
+			exit(-1);
+		}
+		fclose(fp);
 		return;
 	}
 
@@ -278,16 +285,16 @@ void CulclationMpcValue()
 
 	//int score_array[500], result_array[500];
 
-	CPUCONFIG cpuConfig;
+	CPUCONFIG cpuConfig = {0};
 
 	cpuConfig.bookFlag = 0;
 	cpuConfig.bookVariability = 0;
-	cpuConfig.casheSize = 1 << 21;
+	cpuConfig.casheSize = 1 << 22;
 	cpuConfig.color = BLACK;
 	cpuConfig.exactDepth = 0;
+	cpuConfig.winLossDepth = 0;
 	cpuConfig.mpcFlag = TRUE;
 	cpuConfig.tableFlag = TRUE;
-	cpuConfig.winLossDepth = 0;
 
 	for (i = 0; i < 22; i++) {
 		num = 0;
@@ -297,28 +304,27 @@ void CulclationMpcValue()
 		read_mpc_info(mpcInfo, MPC_INFO_NUM, "src\\mpc.dat");
 
 		//END_MPC_INFO_NUM = i;
-		printf("MPC計算中 %d / %d\r\n", i, 15);
+		printf("MPC計算中 %d / %d\r\n", i, 22);
 
 		// 500局の分散を計算
-		for (j = 0; j < 500; j++) {
+		for (j = 0; j < GAME_COUNT; j++) {
 
 			color = BLACK;
 			bk = FIRST_BK;
 			wh = FIRST_WH;
 			byteCounter = 0;
-
 			// k = 1 は石差データが入っているため
 			for (byteCounter = 0;; byteCounter++) {
 
 				int empty = RemainSt1ULL(bk, wh);
-				if (empty >= (i + 3) + 2)
+				if (empty >= (i + 3) + 4)
 				{
 					cpuConfig.color = color;
 					if (color == WHITE)
 					{
 						swap(&bk, &wh);
 					}
-					
+
 					cpuConfig.searchDepth = sw_depth[i];
 					GetMoveFromAI(bk, wh, empty, &cpuConfig); //low
 					value_low = g_evaluation;
@@ -406,14 +412,13 @@ void CulclationMpcValue()
 				}
 				div_var = sqrt(div_var / (double)num);
 				printf("game:%d, prob depth:%d/%d, offset:%d, deviation:%d\n", j,
-				((i + MPC_DEPTH_MIN) & 1) + 2 * ((i + MPC_DEPTH_MIN) / 4),
-				i + MPC_DEPTH_MIN, (int)(div_mean), (int)(div_var));
+					sw_depth[i], i + MPC_DEPTH_MIN, (int)(div_mean), (int)(div_var));
 				//printf("game:%d, prob depth:%d/%d, offset:%d, deviation:%d\n", j,
 				//	sharrow_level[i],
 				//	i + END_MPC_DEPTH_MIN, (int)(div_mean), (int)(div_var));
 
 			}
-
+			HashClear(g_hash);
 		}
 
 		div_mean = mean / (double)num;

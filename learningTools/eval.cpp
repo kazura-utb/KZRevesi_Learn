@@ -12,7 +12,6 @@
 #include "eval.h"
 #include "board.h"
 #include "fio.h"
-#include "mpc_learn.h"
 
 /* 各座標 */
 #define A1 0			/* A1 */
@@ -103,20 +102,20 @@ double *mobility;
 double *parity;
 
 /* 評価パターンテーブル(おおもと) */
-double hori_ver1_data[60][INDEX_NUM];
-double hori_ver2_data[60][INDEX_NUM];
-double hori_ver3_data[60][INDEX_NUM];
-double dia_ver1_data[60][INDEX_NUM];
-double dia_ver2_data[60][INDEX_NUM / 3];
-double dia_ver3_data[60][INDEX_NUM / 9];
-double dia_ver4_data[60][INDEX_NUM / 27];
-double edge_data[60][INDEX_NUM * 9];
-double edge_cor_data[60][INDEX_NUM * 9];
-double corner5_2_data[60][INDEX_NUM * 9];
-double corner3_3_data[60][INDEX_NUM * 3];
-double triangle_data[60][INDEX_NUM * 9];
-double mobility_data[60][MOBILITY_NUM];
-double parity_data[60][PARITY_NUM];
+double hori_ver1_data[2][60][INDEX_NUM];
+double hori_ver2_data[2][60][INDEX_NUM];
+double hori_ver3_data[2][60][INDEX_NUM];
+double dia_ver1_data[2][60][INDEX_NUM];
+double dia_ver2_data[2][60][INDEX_NUM / 3];
+double dia_ver3_data[2][60][INDEX_NUM / 9];
+double dia_ver4_data[2][60][INDEX_NUM / 27];
+double edge_data[2][60][INDEX_NUM * 9];
+double corner5_2_data[2][60][INDEX_NUM * 9];
+double corner3_3_data[2][60][INDEX_NUM * 3];
+double triangle_data[2][60][INDEX_NUM * 9];
+double mobility_data[2][60][MOBILITY_NUM];
+double parity_data[2][60][PARITY_NUM];
+double constant_data[2][60];
 
 int pow_table[10] = { 1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683 };
 
@@ -223,7 +222,7 @@ UINT8 posEval[64] =
 
 INT32 g_evaluation;
 
-double check_h_ver1(UINT8 *board)
+float check_h_ver1(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -282,10 +281,10 @@ double check_h_ver1(UINT8 *board)
 	eval += hori_ver1[key];
 	key_hori_ver1[3] = hori_ver1[key];
 
-	return eval;
+	return (float)eval;
 }
 
-double check_h_ver2(UINT8 *board)
+float check_h_ver2(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -343,11 +342,11 @@ double check_h_ver2(UINT8 *board)
 	eval += hori_ver2[key];
 	key_hori_ver2[3] = hori_ver2[key];
 
-	return eval;
+	return (float)eval;
 
 }
 
-double check_h_ver3(UINT8 *board)
+float check_h_ver3(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -405,11 +404,11 @@ double check_h_ver3(UINT8 *board)
 	eval += hori_ver3[key];
 	key_hori_ver3[3] = hori_ver3[key];
 
-	return eval;
+	return (float)eval;
 
 }
 
-double check_dia_ver1(UINT8 *board)
+float check_dia_ver1(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -441,10 +440,10 @@ double check_dia_ver1(UINT8 *board)
 	eval += dia_ver1[key];
 	key_dia_ver1[1] = dia_ver1[key];
 
-	return eval;
+	return (float)eval;
 }
 
-double check_dia_ver2(UINT8 *board)
+float check_dia_ver2(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -498,10 +497,10 @@ double check_dia_ver2(UINT8 *board)
 	eval += dia_ver2[key];
 	key_dia_ver2[3] = dia_ver2[key];
 
-	return eval;
+	return (float)eval;
 }
 
-double check_dia_ver3(UINT8 *board)
+float check_dia_ver3(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -546,10 +545,10 @@ double check_dia_ver3(UINT8 *board)
 	eval += dia_ver3[key];
 	key_dia_ver3[3] = dia_ver3[key];
 
-	return eval;
+	return (float)eval;
 }
 
-double check_dia_ver4(UINT8 *board)
+float check_dia_ver4(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -590,10 +589,10 @@ double check_dia_ver4(UINT8 *board)
 	eval += dia_ver4[key];
 	key_dia_ver4[3] = dia_ver4[key];
 
-	return eval;
+	return (float)eval;
 }
 
-double check_edge(UINT8 *board)
+float check_edge(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -654,10 +653,10 @@ double check_edge(UINT8 *board)
 	eval += edge[key];
 	key_edge[3] = edge[key];
 
-	return eval;
+	return (float)eval;
 }
 
-double check_corner3_3(UINT8 *board)
+float check_corner3_3(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -714,10 +713,10 @@ double check_corner3_3(UINT8 *board)
 	eval += corner3_3[key];
 	key_corner3_3[3] = corner3_3[key];
 
-	return eval;
+	return (float)eval;
 }
 
-double check_corner5_2(UINT8 *board)
+float check_corner5_2(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -834,10 +833,10 @@ double check_corner5_2(UINT8 *board)
 	eval += corner5_2[key];
 	key_corner5_2[7] = corner5_2[key];
 
-	return eval;
+	return (float)eval;
 }
 
-double check_triangle(UINT8 *board)
+float check_triangle(UINT8 *board)
 {
 	int key;
 	double eval;
@@ -898,17 +897,19 @@ double check_triangle(UINT8 *board)
 	eval += triangle[key];
 	key_triangle[3] = triangle[key];
 
-	return eval;
+	return (float)eval;
 }
 
-double check_parity(UINT64 blank, UINT32 color)
+float check_parity(UINT64 blank, UINT32 color)
 {
 	int p;
 
-	p = (CountBit(blank) % 2) + (color * 2);
-	key_parity = parity[p];
+	p = CountBit(blank & 0x0f0f0f0f) % 2;
+	p |= (CountBit(blank & 0xf0f0f0f0) % 2) << 1;
+	p |= (CountBit(blank & 0x0f0f0f0f00000000) % 2) << 2;
+	p |= (CountBit(blank & 0xf0f0f0f000000000) % 2) << 3;
 
-	return parity[p];
+	return (float)parity[p];
 }
 
 double check_mobility(UINT64 b_board, UINT64 w_board)
@@ -922,31 +923,24 @@ double check_mobility(UINT64 b_board, UINT64 w_board)
 	return key_mobility;
 }
 
-INT32 Evaluation(UINT8 *board, UINT64 b_board, UINT64 w_board, UINT32 color, UINT32 stage)
+INT32 Evaluation(UINT8 *board, UINT64 bk, UINT64 wh, UINT32 color, UINT32 stage)
 {
 	double eval;
 
-	if (stage < 0 || stage > 59)
-	{
-		printf("ASSERT:Buffer overrun!!::stage = %d\n", stage);
-		exit(-1);
-	}
-
-	color = 0;
 	/* 現在の色とステージでポインタを指定 */
-	hori_ver1 = hori_ver1_data[stage];
-	hori_ver2 = hori_ver2_data[stage];
-	hori_ver3 = hori_ver3_data[stage];
-	dia_ver1 = dia_ver1_data[stage];
-	dia_ver2 = dia_ver2_data[stage];
-	dia_ver3 = dia_ver3_data[stage];
-	dia_ver4 = dia_ver4_data[stage];
-	edge = edge_data[stage];
-	corner5_2 = corner5_2_data[stage];
-	corner3_3 = corner3_3_data[stage];
-	triangle = triangle_data[stage];
-	mobility = mobility_data[stage];
-	parity = parity_data[stage];
+	hori_ver1 = hori_ver1_data[color][stage];
+	hori_ver2 = hori_ver2_data[color][stage];
+	hori_ver3 = hori_ver3_data[color][stage];
+	dia_ver1 = dia_ver1_data[color][stage];
+	dia_ver2 = dia_ver2_data[color][stage];
+	dia_ver3 = dia_ver3_data[color][stage];
+	dia_ver4 = dia_ver4_data[color][stage];
+	edge = edge_data[color][stage];
+	corner5_2 = corner5_2_data[color][stage];
+	corner3_3 = corner3_3_data[color][stage];
+	triangle = triangle_data[color][stage];
+	mobility = mobility_data[color][stage];
+	parity = parity_data[color][stage];
 
 	eval = check_h_ver1(board);
 	eval += check_h_ver2(board);
@@ -962,15 +956,16 @@ INT32 Evaluation(UINT8 *board, UINT64 b_board, UINT64 w_board, UINT32 color, UIN
 	eval += check_corner3_3(board);
 	eval += check_triangle(board);
 
-	eval += check_mobility(b_board, w_board);
-	//eval += constant_data[color][stage];
-
+	eval += check_parity(~(bk | wh), color);
 	eval_sum = eval;
 	eval *= EVAL_ONE_STONE;
 
 	return (INT32)eval;
 
 }
+
+
+
 
 int opponent_feature(int l, int d)
 {
@@ -982,13 +977,17 @@ int opponent_feature(int l, int d)
 	return f;
 }
 
+
+
+
+#if 1
 BOOL OpenEvalData(char *filename)
 {
 	int stage = 0;
 	int i, evalSize;
 	UCHAR *buf;
-	char *line, *ctr;
-	double *p_table;
+	char *line, *ctr = NULL;
+	double *p_table, *p_table_op;
 
 	buf = DecodeEvalData(&evalSize, filename);
 
@@ -1002,90 +1001,113 @@ BOOL OpenEvalData(char *filename)
 	while (stage < 60)
 	{
 		/* horizon_ver1 */
-		p_table = hori_ver1_data[stage];
+		p_table = hori_ver1_data[0][stage];
+		p_table_op = hori_ver1_data[1][stage];
 		for (i = 0; i < 6561; i++)
 		{
 			p_table[i] = (float)atof(line);
+			/* opponent */
+			p_table_op[opponent_feature(i, 8)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 
 		/* horizon_ver2 */
-		p_table = hori_ver2_data[stage];
+		p_table = hori_ver2_data[0][stage];
+		p_table_op = hori_ver2_data[1][stage];
 		for (i = 0; i < 6561; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[opponent_feature(i, 8)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 
 		/* horizon_ver3 */
-		p_table = hori_ver3_data[stage];
+		p_table = hori_ver3_data[0][stage];
+		p_table_op = hori_ver3_data[1][stage];
 		for (i = 0; i < 6561; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[opponent_feature(i, 8)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 
 		/* diagram_ver1 */
-		p_table = dia_ver1_data[stage];
+		p_table = dia_ver1_data[0][stage];
+		p_table_op = dia_ver1_data[1][stage];
 		for (i = 0; i < 6561; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[opponent_feature(i, 8)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 
 		/* diagram_ver2 */
-		p_table = dia_ver2_data[stage];
+		p_table = dia_ver2_data[0][stage];
+		p_table_op = dia_ver2_data[1][stage];
 		for (i = 0; i < 2187; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[opponent_feature(i, 7)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 
 		/* diagram_ver3 */
-		p_table = dia_ver3_data[stage];
+		p_table = dia_ver3_data[0][stage];
+		p_table_op = dia_ver3_data[1][stage];
 		for (i = 0; i < 729; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[opponent_feature(i, 6)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 
 		/* diagram_ver4 */
-		p_table = dia_ver4_data[stage];
+		p_table = dia_ver4_data[0][stage];
+		p_table_op = dia_ver4_data[1][stage];
 		for (i = 0; i < 243; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[opponent_feature(i, 5)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 
 		/* edge */
-		p_table = edge_data[stage];
+		p_table = edge_data[0][stage];
+		p_table_op = edge_data[1][stage];
 		for (i = 0; i < 59049; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[opponent_feature(i, 10)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 
 		/* corner5 + 2X */
-		p_table = corner5_2_data[stage];
+		p_table = corner5_2_data[0][stage];
+		p_table_op = corner5_2_data[1][stage];
 		for (i = 0; i < 59049; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[opponent_feature(i, 10)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 
 		/* corner3_3 */
-		p_table = corner3_3_data[stage];
+		p_table = corner3_3_data[0][stage];
+		p_table_op = corner3_3_data[1][stage];
 		for (i = 0; i < 19683; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[opponent_feature(i, 9)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 
 		/* triangle */
-		p_table = triangle_data[stage];
+		p_table = triangle_data[0][stage];
+		p_table_op = triangle_data[1][stage];
 		for (i = 0; i < 59049; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[opponent_feature(i, 10)] = -p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
 #if 0
@@ -1100,13 +1122,15 @@ BOOL OpenEvalData(char *filename)
 		}
 #endif
 		/* parity */
-		p_table = parity_data[stage];
+		p_table = parity_data[0][stage];
+		p_table_op = parity_data[1][stage];
 		for (i = 0; i < PARITY_NUM; i++)
 		{
 			p_table[i] = (float)atof(line);
+			p_table_op[i] = p_table[i];
 			line = strtok_s(NULL, "\n", &ctr);
 		}
-		
+
 		/* constant */
 		//constant_data[0][stage] = (float)atof(line);
 		//line = strtok_s(NULL, "\n", &ctr);
@@ -1119,10 +1143,11 @@ BOOL OpenEvalData(char *filename)
 	return TRUE;
 }
 
+#endif
+
 BOOL LoadData()
 {
 	BOOL result;
-
 	/* 定石データの読み込み */
 #if 0
 	result = OpenBook("src\\books.bin");
@@ -1131,7 +1156,6 @@ BOOL LoadData()
 		return result;
 	}
 #endif
-
 	/* 評価テーブルの読み込み */
 	result = OpenEvalData("src\\eval.bin");
 	if (result == FALSE)
@@ -1140,12 +1164,7 @@ BOOL LoadData()
 	}
 
 	///* MPCテーブルの読み込み */
-	result = OpenMpcInfoData("src\\mpc.dat");
-
-	if (result == FALSE)
-	{
-		result = save_mpc(0, NULL, "src\\mpc.dat");
-	}
+	//result = OpenMpcInfoData("src\\mpc.dat");
 
 	return result;
 }

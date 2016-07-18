@@ -13,9 +13,9 @@
 #include "type.h"
 #include "rev.h"
 #include "move.h"
+#include "eval.h"
 #include "cpu.h"
 #include "hash.h"
-#include "GetPattern.h"
 #include "mpc_learn.h"
 
 /* 各座標 */
@@ -218,8 +218,10 @@ void init_substitution_table_exact(HashTable *hash)
 	for (i = 0; i < g_casheSize; i++)
 	{
 
-		hash->data[i].lower = -65;
-		hash->data[i].upper = 65;
+		hash->entry[i].deepest.lower = -INF_SCORE;
+		hash->entry[i].deepest.upper = INF_SCORE;
+		hash->entry[i].newest.lower = -INF_SCORE;
+		hash->entry[i].newest.upper = INF_SCORE;
 	}
 }
 
@@ -228,9 +230,10 @@ void init_substitution_table_winloss(HashTable *hash)
 	int i;
 	for (i = 0; i < g_casheSize; i++)
 	{
-
-		hash->data[i].lower = LOSS - 1;
-		hash->data[i].upper = WIN - 1;
+		hash->entry[i].deepest.lower = -2;
+		hash->entry[i].deepest.upper = 2;
+		hash->entry[i].newest.lower = -2;
+		hash->entry[i].newest.upper = 2;
 	}
 }
 
@@ -250,6 +253,7 @@ void initCountTable()
 	memset(paritycnt, 0, sizeof(paritycnt));
 
 }
+
 
 /* 線対称 */
 int convert_index_sym(int index_num, const int *num_table)
@@ -1382,6 +1386,32 @@ void write_triangle(USHORT *keyIndex, int *board)
 	trianglecnt[key]++;
 }
 
+int convert_index_parity_sym(int key)
+{
+	switch (key)
+	{
+	case 2:
+	case 4:
+	case 8:
+		key = 1;
+		break;
+	case 5:
+	case 6:
+	case 9:
+	case 10:
+	case 12:
+		key = 3;
+		break;
+	case 11:
+	case 13:
+	case 14:
+		key = 7;
+		break;
+	}
+
+	return key;
+}
+
 void write_parity(USHORT *keyIndex, UINT64 blank)
 {
 	int key;
@@ -1391,7 +1421,7 @@ void write_parity(USHORT *keyIndex, UINT64 blank)
 	key |= (CountBit(blank & 0xf0f0f0f0) % 2) << 1;
 	key |= (CountBit(blank & 0x0f0f0f0f00000000) % 2) << 2;
 	key |= (CountBit(blank & 0xf0f0f0f000000000) % 2) << 3;
-#if 0
+#if 1
 	sym_key = convert_index_parity_sym(key);
 	if (key > sym_key)
 	{
@@ -1524,6 +1554,7 @@ int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 	bool badFlag = false;
 	int turn = 0;
 	int offset = 0;
+	UINT32 temp;
 
 	while (1)
 	{
@@ -1609,7 +1640,7 @@ int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 		/* 対局データ生成 */
 		if (turn == stage)
 		{
-			int board[64] = { 0 };
+			int board[64];
 			init_index_board(board, bk, wh);
 
 			write_h_ver1(&keyIndex[offset + 0], board);
@@ -1634,6 +1665,7 @@ int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 #endif
 			write_parity(&keyIndex[offset + 46], ~(bk | wh));
 			offset += PATTERN_NUM;
+
 		}
 
 		byteCounter += 2;
@@ -1682,14 +1714,8 @@ int convertWtbToAscii(char* t, USHORT* keyIndex, int stage)
 				//	}
 				//}
 				// ステージごとのパターンを抽出
-				ret = getFeatureIndex(&keyIndex[count * PATTERN_NUM], &buf[i * 68 + 7], stage, &t[count]);
+				ret = getFeatureIndex(&keyIndex[count* PATTERN_NUM], &buf[i * 68 + 7], stage, &t[count]);
 				count++;
-				/*if (ret == 2 * PATTERN_NUM){
-					count += 2;
-					}
-					else if (ret == PATTERN_NUM){
-					count++;
-					}*/
 
 				index_count++;
 			}
@@ -1709,6 +1735,33 @@ int convertKifuToAscii(char* t, USHORT* keyIndex, int stage)
 	int error, count = 0, index_count = game_num1;
 	int offset, ret;
 
+	if ((error = fopen_s(&rfp, "kifu\\kifu.dat", "rb")) != 0){
+		return -1;
+	}
+
+	// example
+	// F5D6C3D3C4F4C5B3C2B4 E3E6C6F6～(略)～H5H8H7 0
+	while (fgets(buf, 512, rfp) != NULL)
+	{
+		ret = getFeatureIndex2(&t[count], &keyIndex[count * PATTERN_NUM], buf, stage);
+
+		// 石差を取得
+		if (t[count] < -64 || t[count] > 64){
+			printf("assert!!! st1ULL diff over at %d\n", count);
+			exit(1);
+		}
+		if (ret != -1)
+		{
+			count++;
+			index_count++;
+		}
+	}
+
+	fclose(rfp);
+
+	return count;
+
+#if 0
 	for (int i = 1;; i++){
 
 		sprintf_s(file_name, "kifu\\%02dE4.gam.%d.new", (i + 1) / 2, ((i - 1) % 2) + 1);
@@ -1720,13 +1773,13 @@ int convertKifuToAscii(char* t, USHORT* keyIndex, int stage)
 		// F5D6C3D3C4F4C5B3C2B4 E3E6C6F6～(略)～H5H8H7 0
 		while (fgets(buf, 512, rfp) != NULL)
 		{
+			ret = getFeatureIndex2(&t[count], &keyIndex[count * PATTERN_NUM], buf, stage);
+
 			// 石差を取得
 			if (t[count] < -64 || t[count] > 64){
 				printf("assert!!! st1ULL diff over at %d\n", count);
 				exit(1);
 			}
-
-			ret = getFeatureIndex2(&t[count], &keyIndex[count * PATTERN_NUM], buf, stage);
 			if (ret != -1)
 			{
 				count++;
@@ -1736,8 +1789,8 @@ int convertKifuToAscii(char* t, USHORT* keyIndex, int stage)
 		fclose(rfp);
 
 	}
+#endif
 
-	return count;
 }
 
 void writeTable(char *file_name, int stage)
@@ -1752,48 +1805,47 @@ void writeTable(char *file_name, int stage)
 	int i;
 	for (i = 0; i < 6561; i++)
 	{
-		fprintf(fp, "%lf\n", hori_ver1_data[stage][i]);
+		fprintf(fp, "%lf\n", hori_ver1_data[0][stage][i]);
 	}
 	for (i = 0; i < 6561; i++)
 	{
-		fprintf(fp, "%lf\n", hori_ver2_data[stage][i]);
+		fprintf(fp, "%lf\n", hori_ver2_data[0][stage][i]);
 	}
 	for (i = 0; i < 6561; i++)
 	{
-		fprintf(fp, "%lf\n", hori_ver3_data[stage][i]);
+		fprintf(fp, "%lf\n", hori_ver3_data[0][stage][i]);
 	}
 	for (i = 0; i < 6561; i++)
 	{
-		fprintf(fp, "%lf\n", dia_ver1_data[stage][i]);
-
+		fprintf(fp, "%lf\n", dia_ver1_data[0][stage][i]);
 	}
 	for (i = 0; i < 2187; i++)
 	{
-		fprintf(fp, "%lf\n", dia_ver2_data[stage][i]);
+		fprintf(fp, "%lf\n", dia_ver2_data[0][stage][i]);
 	}
 	for (i = 0; i < 729; i++)
 	{
-		fprintf(fp, "%lf\n", dia_ver3_data[stage][i]);
+		fprintf(fp, "%lf\n", dia_ver3_data[0][stage][i]);
 	}
 	for (i = 0; i < 243; i++)
 	{
-		fprintf(fp, "%lf\n", dia_ver4_data[stage][i]);
+		fprintf(fp, "%lf\n", dia_ver4_data[0][stage][i]);
 	}
 	for (i = 0; i < 59049; i++)
 	{
-		fprintf(fp, "%lf\n", edge_data[stage][i]);
+		fprintf(fp, "%lf\n", edge_data[0][stage][i]);
 	}
 	for (i = 0; i < 59049; i++)
 	{
-		fprintf(fp, "%lf\n", corner5_2_data[stage][i]);
+		fprintf(fp, "%lf\n", corner5_2_data[0][stage][i]);
 	}
 	for (i = 0; i < 19683; i++)
 	{
-		fprintf(fp, "%lf\n", corner3_3_data[stage][i]);
+		fprintf(fp, "%lf\n", corner3_3_data[0][stage][i]);
 	}
 	for (i = 0; i < 59049; i++)
 	{
-		fprintf(fp, "%lf\n", triangle_data[stage][i]);
+		fprintf(fp, "%lf\n", triangle_data[0][stage][i]);
 	}
 #if 0
 	for (i = 0; i < MOBILITY_NUM; i++)
@@ -1803,7 +1855,7 @@ void writeTable(char *file_name, int stage)
 #endif
 	for (i = 0; i < PARITY_NUM; i++)
 	{
-		fprintf(fp, "%lf\n", parity_data[stage][i]);
+		fprintf(fp, "%lf\n", parity_data[0][stage][i]);
 	}
 
 	fclose(fp);
@@ -1815,7 +1867,7 @@ double normalize(double a, UINT64 fcnt, double d){
 		return 0;
 	}
 
-	return a * min((double)0.0006, 1 / (double)fcnt) * d;
+	return a * min((double)0.01, 1 / (double)fcnt) * d;
 }
 
 double culcrk(float ** f, USHORT* index)
@@ -1845,64 +1897,64 @@ double culcSum(USHORT* keyIndex, int stage)
 	double eval = 0;
 	int counter = 0;
 
-	eval += hori_ver1_data[stage][keyIndex[counter++]];
-	eval += hori_ver1_data[stage][keyIndex[counter++]];
-	eval += hori_ver1_data[stage][keyIndex[counter++]];
-	eval += hori_ver1_data[stage][keyIndex[counter++]];
+	eval += hori_ver1_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver1_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver1_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver1_data[0][stage][keyIndex[counter++]];
 
-	eval += hori_ver2_data[stage][keyIndex[counter++]];
-	eval += hori_ver2_data[stage][keyIndex[counter++]];
-	eval += hori_ver2_data[stage][keyIndex[counter++]];
-	eval += hori_ver2_data[stage][keyIndex[counter++]];
+	eval += hori_ver2_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver2_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver2_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver2_data[0][stage][keyIndex[counter++]];
 
-	eval += hori_ver3_data[stage][keyIndex[counter++]];
-	eval += hori_ver3_data[stage][keyIndex[counter++]];
-	eval += hori_ver3_data[stage][keyIndex[counter++]];
-	eval += hori_ver3_data[stage][keyIndex[counter++]];
+	eval += hori_ver3_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver3_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver3_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver3_data[0][stage][keyIndex[counter++]];
 
-	eval += dia_ver1_data[stage][keyIndex[counter++]];
-	eval += dia_ver1_data[stage][keyIndex[counter++]];
+	eval += dia_ver1_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver1_data[0][stage][keyIndex[counter++]];
 
-	eval += dia_ver2_data[stage][keyIndex[counter++]];
-	eval += dia_ver2_data[stage][keyIndex[counter++]];
-	eval += dia_ver2_data[stage][keyIndex[counter++]];
-	eval += dia_ver2_data[stage][keyIndex[counter++]];
+	eval += dia_ver2_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver2_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver2_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver2_data[0][stage][keyIndex[counter++]];
 
-	eval += dia_ver3_data[stage][keyIndex[counter++]];
-	eval += dia_ver3_data[stage][keyIndex[counter++]];
-	eval += dia_ver3_data[stage][keyIndex[counter++]];
-	eval += dia_ver3_data[stage][keyIndex[counter++]];
+	eval += dia_ver3_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver3_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver3_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver3_data[0][stage][keyIndex[counter++]];
 
-	eval += dia_ver4_data[stage][keyIndex[counter++]];
-	eval += dia_ver4_data[stage][keyIndex[counter++]];
-	eval += dia_ver4_data[stage][keyIndex[counter++]];
-	eval += dia_ver4_data[stage][keyIndex[counter++]];
+	eval += dia_ver4_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver4_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver4_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver4_data[0][stage][keyIndex[counter++]];
 
-	eval += edge_data[stage][keyIndex[counter++]];
-	eval += edge_data[stage][keyIndex[counter++]];
-	eval += edge_data[stage][keyIndex[counter++]];
-	eval += edge_data[stage][keyIndex[counter++]];
+	eval += edge_data[0][stage][keyIndex[counter++]];
+	eval += edge_data[0][stage][keyIndex[counter++]];
+	eval += edge_data[0][stage][keyIndex[counter++]];
+	eval += edge_data[0][stage][keyIndex[counter++]];
 
-	eval += corner5_2_data[stage][keyIndex[counter++]];
-	eval += corner5_2_data[stage][keyIndex[counter++]];
-	eval += corner5_2_data[stage][keyIndex[counter++]];
-	eval += corner5_2_data[stage][keyIndex[counter++]];
-	eval += corner5_2_data[stage][keyIndex[counter++]];
-	eval += corner5_2_data[stage][keyIndex[counter++]];
-	eval += corner5_2_data[stage][keyIndex[counter++]];
-	eval += corner5_2_data[stage][keyIndex[counter++]];
+	eval += corner5_2_data[0][stage][keyIndex[counter++]];
+	eval += corner5_2_data[0][stage][keyIndex[counter++]];
+	eval += corner5_2_data[0][stage][keyIndex[counter++]];
+	eval += corner5_2_data[0][stage][keyIndex[counter++]];
+	eval += corner5_2_data[0][stage][keyIndex[counter++]];
+	eval += corner5_2_data[0][stage][keyIndex[counter++]];
+	eval += corner5_2_data[0][stage][keyIndex[counter++]];
+	eval += corner5_2_data[0][stage][keyIndex[counter++]];
 
-	eval += corner3_3_data[stage][keyIndex[counter++]];
-	eval += corner3_3_data[stage][keyIndex[counter++]];
-	eval += corner3_3_data[stage][keyIndex[counter++]];
-	eval += corner3_3_data[stage][keyIndex[counter++]];
+	eval += corner3_3_data[0][stage][keyIndex[counter++]];
+	eval += corner3_3_data[0][stage][keyIndex[counter++]];
+	eval += corner3_3_data[0][stage][keyIndex[counter++]];
+	eval += corner3_3_data[0][stage][keyIndex[counter++]];
 
-	eval += triangle_data[stage][keyIndex[counter++]];
-	eval += triangle_data[stage][keyIndex[counter++]];
-	eval += triangle_data[stage][keyIndex[counter++]];
-	eval += triangle_data[stage][keyIndex[counter++]];
+	eval += triangle_data[0][stage][keyIndex[counter++]];
+	eval += triangle_data[0][stage][keyIndex[counter++]];
+	eval += triangle_data[0][stage][keyIndex[counter++]];
+	eval += triangle_data[0][stage][keyIndex[counter++]];
 
-	eval += parity_data[stage][keyIndex[counter]];
+	eval += parity_data[0][stage][keyIndex[counter]];
 
 	return eval;
 }
@@ -1979,52 +2031,52 @@ void culc_weight(double scale, int stage)
 	int i;
 	for (i = 0; i < INDEX_NUM; i++)
 	{
-		hori_ver1_data[stage][i] += normalize(scale, hori1cnt[i], hori_ver1_data_d[i]);
+		hori_ver1_data[0][stage][i] += normalize(scale, hori1cnt[i], hori_ver1_data_d[i]);
 	}
 	for (i = 0; i < INDEX_NUM; i++)
 	{
-		hori_ver2_data[stage][i] += normalize(scale, hori2cnt[i], hori_ver2_data_d[i]);
+		hori_ver2_data[0][stage][i] += normalize(scale, hori2cnt[i], hori_ver2_data_d[i]);
 	}
 	for (i = 0; i < INDEX_NUM; i++)
 	{
-		hori_ver3_data[stage][i] += normalize(scale, hori3cnt[i], hori_ver3_data_d[i]);
+		hori_ver3_data[0][stage][i] += normalize(scale, hori3cnt[i], hori_ver3_data_d[i]);
 	}
 
 	for (i = 0; i < INDEX_NUM; i++)
 	{
-		dia_ver1_data[stage][i] += normalize(scale, diag1cnt[i], dia_ver1_data_d[i]);
+		dia_ver1_data[0][stage][i] += normalize(scale, diag1cnt[i], dia_ver1_data_d[i]);
 	}
 	for (i = 0; i < INDEX_NUM / 3; i++)
 	{
-		dia_ver2_data[stage][i] += normalize(scale, diag2cnt[i], dia_ver2_data_d[i]);
+		dia_ver2_data[0][stage][i] += normalize(scale, diag2cnt[i], dia_ver2_data_d[i]);
 	}
 	for (i = 0; i < INDEX_NUM / 9; i++)
 	{
-		dia_ver3_data[stage][i] += normalize(scale, diag3cnt[i], dia_ver3_data_d[i]);
+		dia_ver3_data[0][stage][i] += normalize(scale, diag3cnt[i], dia_ver3_data_d[i]);
 	}
 	for (i = 0; i < INDEX_NUM / 27; i++)
 	{
-		dia_ver4_data[stage][i] += normalize(scale, diag4cnt[i], dia_ver4_data_d[i]);
+		dia_ver4_data[0][stage][i] += normalize(scale, diag4cnt[i], dia_ver4_data_d[i]);
 	}
 
 	for (i = 0; i < INDEX_NUM * 9; i++)
 	{
-		edge_data[stage][i] += normalize(scale, edgecnt[i], edge_data_d[i]);
+		edge_data[0][stage][i] += normalize(scale, edgecnt[i], edge_data_d[i]);
 	}
 
 	for (i = 0; i < INDEX_NUM * 9; i++)
 	{
-		corner5_2_data[stage][i] += normalize(scale, cor52cnt[i], corner5_2_data_d[i]);
+		corner5_2_data[0][stage][i] += normalize(scale, cor52cnt[i], corner5_2_data_d[i]);
 	}
 
 	for (i = 0; i < INDEX_NUM * 3; i++)
 	{
-		corner3_3_data[stage][i] += normalize(scale, cor33cnt[i], corner3_3_data_d[i]);
+		corner3_3_data[0][stage][i] += normalize(scale, cor33cnt[i], corner3_3_data_d[i]);
 	}
 
 	for (i = 0; i < INDEX_NUM * 9; i++)
 	{
-		triangle_data[stage][i] += normalize(scale, trianglecnt[i], triangle_data_d[i]);
+		triangle_data[0][stage][i] += normalize(scale, trianglecnt[i], triangle_data_d[i]);
 	}
 #if 0
 	for (i = 0; i < MOBILITY_NUM; i++)
@@ -2034,7 +2086,7 @@ void culc_weight(double scale, int stage)
 #endif
 	for (i = 0; i < PARITY_NUM; i++)
 	{
-		parity_data[stage][i] += normalize(scale, paritycnt[i], parity_data_d[i]);
+		parity_data[0][stage][i] += normalize(scale, paritycnt[i], parity_data_d[i]);
 	}
 
 }
@@ -2044,7 +2096,7 @@ void Learning(char* t, USHORT* keyIndex, int sample_num, int stage)
 	int i, k, l, maxloop = 1000;
 	int counter;
 	double ave_error[2] = { 1000, 65536 };
-	double alpha = 4000, scalealpha = 0.005;
+	double alpha = 4000, scalealpha = 0.006;
 	double func, deltafunc, error, et;
 	double errorsum;
 
@@ -2099,6 +2151,7 @@ void Learning(char* t, USHORT* keyIndex, int sample_num, int stage)
 			errorsum += (error * error);
 		}
 
+		// 傾きベクトルからそれぞれの特徴の係数を計算
 		culc_weight(scalealpha, stage);
 
 		/* 平均誤差の出力 */
@@ -2117,11 +2170,14 @@ int culcEval()
 {
 	/* 教師信号(石差) */
 	char *t = (char *)malloc(MAX * sizeof(char));
+	if (t == NULL){
+		printf("tの領域を確保できませんでした\n");
+		return 0;
+	}
 	/* 1局面ごとの特徴の番号 */
 	USHORT *keyIndex = (USHORT *)malloc(sizeof(USHORT) * MAX * PATTERN_NUM);
-
-	if (t == NULL || keyIndex == NULL){
-		printf("メモリが確保できませんでした\n");
+	if (keyIndex == NULL){
+		printf("keyIndexの領域を確保できませんでした\n");
 		return 0;
 	}
 
@@ -2157,6 +2213,7 @@ int culcEval()
 	}
 
 	free(t);
+	free(keyIndex);
 
 	return 0;
 
@@ -2259,19 +2316,22 @@ void culcExp(int* scoreList, int* resultList)
 }
 #endif
 
-int _tmain(int argc, _TCHAR* argv[])
+
+void GenerateKifu()
 {
 
-	//for (int i = 0; i < 22; i++){
-	//	printf("%d\n", ((i + MPC_DEPTH_MIN) & 1) + 2 * ((i + MPC_DEPTH_MIN) / 4));
-	//}
-	//exit(0);
+}
+
+int _tmain(int argc, _TCHAR* argv[])
+{
 	BOOL result;
 
 	result = AlocMobilityFunc();
 	culcEval();
 
 	//CulclationMpcValue();
+
+	//GenerateKifu( );
 
 	return 0;
 }

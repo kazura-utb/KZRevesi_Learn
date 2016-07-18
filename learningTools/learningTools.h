@@ -202,7 +202,7 @@ extern double key_mobility;
 extern double key_constant;
 //extern double key_pot_mobility;
 //extern double key_pality;
-extern double eval_sum;
+//extern double eval_sum;
 //extern double mobility;
 
 extern int NowStage;
@@ -234,10 +234,7 @@ void print_line(int[]);
 
 void read_eval_table(int);
 
-UINT64 CreateMoves(UINT64, UINT64, int *);
-
 int CountBit2(int[], int);
-int CountBit(UINT64);
 int CountPotMob(UINT64, UINT64);
 
 void configCPU(int);
