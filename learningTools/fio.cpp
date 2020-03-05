@@ -176,10 +176,10 @@ int encode(UCHAR *encodeData, CodeInfo *codeInfo, UCHAR *data, int dataLen) {
 }
 #endif
 
-int decode(UCHAR *decodeData, int maxLen, UCHAR *data, int dataLen, TreeNode *nodes, int root)
+size_t decode(UCHAR *decodeData, size_t maxLen, UCHAR *data, size_t dataLen, TreeNode *nodes, int root)
 {
 	int nodeIndex = root;
-	int cnt = 0, byteCounter = 0;
+	size_t cnt = 0, byteCounter = 0;
 
 	while (byteCounter < dataLen){
 
@@ -207,9 +207,9 @@ int decode(UCHAR *decodeData, int maxLen, UCHAR *data, int dataLen, TreeNode *no
 
 }
 
-UCHAR *DecodeBookData(INT32 *decodeDataLen_p, char *filename)
+UCHAR *DecodeBookData(size_t *decodeDataLen_p, char *filename)
 {
-	int readSize, decodeDataLen;
+	size_t readSize, decodeDataLen;
 	FILE *fp;
 
 	if (fopen_s(&fp, filename, "rb") != 0 || fp == NULL){
@@ -262,9 +262,10 @@ UCHAR *DecodeBookData(INT32 *decodeDataLen_p, char *filename)
 
 }
 
-UCHAR *DecodeEvalData(INT32 *decodeDataLen_p, char *filename)
+UCHAR *DecodeEvalData(size_t *decodeDataLen_p, char *filename)
 {
-	int i, readSize, decodeDataLen, decodeDataLenSum;
+	size_t readSize, decodeDataLen, decodeDataLenSum;
+	UINT32 i;
 	UCHAR *data;
 	UCHAR *decodeData;
 	FILE *fp;
@@ -285,7 +286,8 @@ UCHAR *DecodeEvalData(INT32 *decodeDataLen_p, char *filename)
 	i = 0;
 	decodeDataLenSum = 0;
 
-	while (i < 60){
+	while (i < 60)
+	{
 		readSize = fread(data, sizeof(UCHAR), 2 * sizeof(int) + 2, fp);
 		// 木データのサイズ
 		int nodesLen = (data[TREE_SIZE_ADDR] << 8)

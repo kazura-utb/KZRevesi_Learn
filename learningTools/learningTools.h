@@ -25,7 +25,7 @@
 ###########################
 */
 
-#define MAX 4200000
+#define MAX 4000000
 #define PATTERN_NUM 47
 
 #define BLACK 0
@@ -35,7 +35,7 @@
 #define FIRST_WH 68853694464
 
 #define INDEX_NUM 6561
-#define MOBILITY_NUM 1
+#define MOBILITY_NUM 36
 #define PARITY_NUM 16
 
 #define MASS_NUM 8

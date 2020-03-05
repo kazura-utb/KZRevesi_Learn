@@ -11,6 +11,7 @@
 #include "learningTools.h"
 #include "bit64.h"
 #include "type.h"
+#include "board.h"
 #include "rev.h"
 #include "move.h"
 #include "eval.h"
@@ -117,6 +118,7 @@ double edge_data_d[INDEX_NUM * 9];
 double corner5_2_data_d[INDEX_NUM * 9];
 double corner3_3_data_d[INDEX_NUM * 3];
 double triangle_data_d[INDEX_NUM * 9];
+double constant_data_d;
 double mobility_data_d[MOBILITY_NUM];
 double parity_data_d[PARITY_NUM];
 
@@ -239,18 +241,19 @@ void init_substitution_table_winloss(HashTable *hash)
 
 void initCountTable()
 {
-	memset(hori1cnt, 0, sizeof(hori1cnt));
-	memset(hori2cnt, 0, sizeof(hori2cnt));
-	memset(hori3cnt, 0, sizeof(hori3cnt));
-	memset(diag1cnt, 0, sizeof(diag1cnt));
-	memset(diag2cnt, 0, sizeof(diag2cnt));
-	memset(diag3cnt, 0, sizeof(diag3cnt));
-	memset(diag4cnt, 0, sizeof(diag4cnt));
-	memset(edgecnt, 0, sizeof(edgecnt));
-	memset(cor52cnt, 0, sizeof(cor52cnt));
-	memset(cor33cnt, 0, sizeof(cor33cnt));
+	memset(hori1cnt, 0, sizeof(hori1cnt)); // 4
+	memset(hori2cnt, 0, sizeof(hori2cnt)); // 4
+	memset(hori3cnt, 0, sizeof(hori3cnt)); // 4
+	memset(diag1cnt, 0, sizeof(diag1cnt)); // 2
+	memset(diag2cnt, 0, sizeof(diag2cnt)); // 4
+	memset(diag3cnt, 0, sizeof(diag3cnt)); // 4
+	memset(diag4cnt, 0, sizeof(diag4cnt)); // 4
+	memset(edgecnt, 0, sizeof(edgecnt));   // 4
+	memset(cor52cnt, 0, sizeof(cor52cnt)); // 8
+	memset(cor33cnt, 0, sizeof(cor33cnt)); // 4
+	memset(trianglecnt, 0, sizeof(trianglecnt));  // 4
 	memset(mobcnt, 0, sizeof(mobcnt));
-	memset(paritycnt, 0, sizeof(paritycnt));
+	//memset(paritycnt, 0, sizeof(paritycnt)); // 1
 
 }
 
@@ -297,14 +300,14 @@ void write_h_ver1(USHORT *keyIndex, int *board)
 	keyIndex[0] = key;
 	hori1cnt[key]++;
 
-	key = board[A7];
-	key += 3 * board[B7];
-	key += 9 * board[C7];
-	key += 27 * board[D7];
-	key += 81 * board[E7];
-	key += 243 * board[F7];
-	key += 729 * board[G7];
-	key += 2187 * board[H7];
+	key = board[H7];
+	key += 3 * board[G7];
+	key += 9 * board[F7];
+	key += 27 * board[E7];
+	key += 81 * board[D7];
+	key += 243 * board[C7];
+	key += 729 * board[B7];
+	key += 2187 * board[A7];
 
 	sym_key = convert_index_sym(key, hori_convert_table);
 	if (key > sym_key)
@@ -315,14 +318,14 @@ void write_h_ver1(USHORT *keyIndex, int *board)
 	keyIndex[1] = key;
 	hori1cnt[key]++;
 
-	key = board[B1];
-	key += 3 * board[B2];
-	key += 9 * board[B3];
-	key += 27 * board[B4];
-	key += 81 * board[B5];
-	key += 243 * board[B6];
-	key += 729 * board[B7];
-	key += 2187 * board[B8];
+	key = board[B8];
+	key += 3 * board[B7];
+	key += 9 * board[B6];
+	key += 27 * board[B5];
+	key += 81 * board[B4];
+	key += 243 * board[B3];
+	key += 729 * board[B2];
+	key += 2187 * board[B1];
 
 	sym_key = convert_index_sym(key, hori_convert_table);
 	if (key > sym_key)
@@ -379,14 +382,14 @@ void write_h_ver2(USHORT *keyIndex, int *board)
 	keyIndex[0] = key;
 	hori2cnt[key]++;
 
-	key = board[A6];
-	key += 3 * board[B6];
-	key += 9 * board[C6];
-	key += 27 * board[D6];
-	key += 81 * board[E6];
-	key += 243 * board[F6];
-	key += 729 * board[G6];
-	key += 2187 * board[H6];
+	key = board[H6];
+	key += 3 * board[G6];
+	key += 9 * board[F6];
+	key += 27 * board[E6];
+	key += 81 * board[D6];
+	key += 243 * board[C6];
+	key += 729 * board[B6];
+	key += 2187 * board[A6];
 
 	sym_key = convert_index_sym(key, hori_convert_table);
 	if (key > sym_key)
@@ -397,14 +400,14 @@ void write_h_ver2(USHORT *keyIndex, int *board)
 	keyIndex[1] = key;
 	hori2cnt[key]++;
 
-	key = board[C1];
-	key += 3 * board[C2];
-	key += 9 * board[C3];
-	key += 27 * board[C4];
-	key += 81 * board[C5];
-	key += 243 * board[C6];
-	key += 729 * board[C7];
-	key += 2187 * board[C8];
+	key = board[C8];
+	key += 3 * board[C7];
+	key += 9 * board[C6];
+	key += 27 * board[C5];
+	key += 81 * board[C4];
+	key += 243 * board[C3];
+	key += 729 * board[C2];
+	key += 2187 * board[C1];
 
 	sym_key = convert_index_sym(key, hori_convert_table);
 	if (key > sym_key)
@@ -461,14 +464,14 @@ void write_h_ver3(USHORT *keyIndex, int *board)
 	keyIndex[0] = key;
 	hori3cnt[key]++;
 
-	key = board[A5];
-	key += 3 * board[B5];
-	key += 9 * board[C5];
-	key += 27 * board[D5];
-	key += 81 * board[E5];
-	key += 243 * board[F5];
-	key += 729 * board[G5];
-	key += 2187 * board[H5];
+	key = board[H5];
+	key += 3 * board[G5];
+	key += 9 * board[F5];
+	key += 27 * board[E5];
+	key += 81 * board[D5];
+	key += 243 * board[C5];
+	key += 729 * board[B5];
+	key += 2187 * board[A5];
 
 	sym_key = convert_index_sym(key, hori_convert_table);
 	if (key > sym_key)
@@ -479,14 +482,14 @@ void write_h_ver3(USHORT *keyIndex, int *board)
 	keyIndex[1] = key;
 	hori3cnt[key]++;
 
-	key = board[D1];
-	key += 3 * board[D2];
-	key += 9 * board[D3];
-	key += 27 * board[D4];
-	key += 81 * board[D5];
-	key += 243 * board[D6];
-	key += 729 * board[D7];
-	key += 2187 * board[D8];
+	key = board[D8];
+	key += 3 * board[D7];
+	key += 9 * board[D6];
+	key += 27 * board[D5];
+	key += 81 * board[D4];
+	key += 243 * board[D3];
+	key += 729 * board[D2];
+	key += 2187 * board[D1];
 
 	sym_key = convert_index_sym(key, hori_convert_table);
 	if (key > sym_key)
@@ -589,13 +592,13 @@ void write_dia_ver2(USHORT *keyIndex, int *board)
 	keyIndex[0] = key;
 	diag2cnt[key]++;
 
-	key = board[B1];
-	key += 3 * board[C2];
-	key += 9 * board[D3];
+	key = board[H7];
+	key += 3 * board[G6];
+	key += 9 * board[F5];
 	key += 27 * board[E4];
-	key += 81 * board[F5];
-	key += 243 * board[G6];
-	key += 729 * board[H7];
+	key += 81 * board[D3];
+	key += 243 * board[C2];
+	key += 729 * board[B1];
 
 	sym_key = convert_index_sym(key, dia2_convert_table);
 	if (key > sym_key)
@@ -606,13 +609,13 @@ void write_dia_ver2(USHORT *keyIndex, int *board)
 	keyIndex[1] = key;
 	diag2cnt[key]++;
 
-	key = board[H2];
-	key += 3 * board[G3];
-	key += 9 * board[F4];
+	key = board[B8];
+	key += 3 * board[C7];
+	key += 9 * board[D6];
 	key += 27 * board[E5];
-	key += 81 * board[D6];
-	key += 243 * board[C7];
-	key += 729 * board[B8];
+	key += 81 * board[F4];
+	key += 243 * board[G3];
+	key += 729 * board[H2];
 
 	sym_key = convert_index_sym(key, dia2_convert_table);
 	if (key > sym_key)
@@ -662,12 +665,12 @@ void write_dia_ver3(USHORT *keyIndex, int *board)
 	keyIndex[0] = key;
 	diag3cnt[key]++;
 
-	key = board[C1];
-	key += 3 * board[D2];
-	key += 9 * board[E3];
-	key += 27 * board[F4];
-	key += 81 * board[G5];
-	key += 243 * board[H6];
+	key = board[H6];
+	key += 3 * board[G5];
+	key += 9 * board[F4];
+	key += 27 * board[E3];
+	key += 81 * board[D2];
+	key += 243 * board[C1];
 
 	sym_key = convert_index_sym(key, dia3_convert_table);
 	if (key > sym_key)
@@ -678,12 +681,12 @@ void write_dia_ver3(USHORT *keyIndex, int *board)
 	keyIndex[1] = key;
 	diag3cnt[key]++;
 
-	key = board[H3];
-	key += 3 * board[G4];
-	key += 9 * board[F5];
-	key += 27 * board[E6];
-	key += 81 * board[D7];
-	key += 243 * board[C8];
+	key = board[C8];
+	key += 3 * board[D7];
+	key += 9 * board[E6];
+	key += 27 * board[F5];
+	key += 81 * board[G4];
+	key += 243 * board[H3];
 
 	sym_key = convert_index_sym(key, dia3_convert_table);
 	if (key > sym_key)
@@ -731,11 +734,11 @@ void write_dia_ver4(USHORT *keyIndex, int *board)
 	keyIndex[0] = key;
 	diag4cnt[key]++;
 
-	key = board[D1];
-	key += 3 * board[E2];
+	key = board[H5];
+	key += 3 * board[G4];
 	key += 9 * board[F3];
-	key += 27 * board[G4];
-	key += 81 * board[H5];
+	key += 27 * board[E2];
+	key += 81 * board[D1];
 
 	sym_key = convert_index_sym(key, dia4_convert_table);
 	if (key > sym_key)
@@ -746,11 +749,11 @@ void write_dia_ver4(USHORT *keyIndex, int *board)
 	keyIndex[1] = key;
 	diag4cnt[key]++;
 
-	key = board[H4];
-	key += 3 * board[G5];
+	key = board[D8];
+	key += 3 * board[E7];
 	key += 9 * board[F6];
-	key += 27 * board[E7];
-	key += 81 * board[D8];
+	key += 27 * board[G5];
+	key += 81 * board[H4];
 
 	sym_key = convert_index_sym(key, dia4_convert_table);
 	if (key > sym_key)
@@ -781,64 +784,64 @@ void write_dia_ver4(USHORT *keyIndex, int *board)
 /*
 void write_dia_ver5(USHORT *keyIndex, int *board)
 {
-	int key;
-	int sym_key;
+int key;
+int sym_key;
 
-	key = board[D1];
-	key += 3 * board[C2];
-	key += 9 * board[B3];
-	key += 27 * board[A4];
+key = board[D1];
+key += 3 * board[C2];
+key += 9 * board[B3];
+key += 27 * board[A4];
 
-	sym_key = convert_index_sym(key, dia5_convert_table);
-	if (key > sym_key)
-	{
-		key = sym_key;
-	}
+sym_key = convert_index_sym(key, dia5_convert_table);
+if (key > sym_key)
+{
+key = sym_key;
+}
 
-	keyIndex[0] = key;
-	diag5cnt[key]++;
+keyIndex[0] = key;
+diag5cnt[key]++;
 
-	key = board[D8];
-	key += 3 * board[C7];
-	key += 9 * board[B6];
-	key += 27 * board[A5];
+key = board[D8];
+key += 3 * board[C7];
+key += 9 * board[B6];
+key += 27 * board[A5];
 
-	sym_key = convert_index_sym(key, dia5_convert_table);
-	if (key > sym_key)
-	{
-		key = sym_key;
-	}
+sym_key = convert_index_sym(key, dia5_convert_table);
+if (key > sym_key)
+{
+key = sym_key;
+}
 
-	keyIndex[1] = key;
-	diag5cnt[key]++;
+keyIndex[1] = key;
+diag5cnt[key]++;
 
-	key = board[E1];
-	key += 3 * board[F2];
-	key += 9 * board[G3];
-	key += 27 * board[H4];
+key = board[E1];
+key += 3 * board[F2];
+key += 9 * board[G3];
+key += 27 * board[H4];
 
-	sym_key = convert_index_sym(key, dia5_convert_table);
-	if (key > sym_key)
-	{
-		key = sym_key;
-	}
+sym_key = convert_index_sym(key, dia5_convert_table);
+if (key > sym_key)
+{
+key = sym_key;
+}
 
-	keyIndex[2] = key;
-	diag5cnt[key]++;
+keyIndex[2] = key;
+diag5cnt[key]++;
 
-	key = board[E8];
-	key += 3 * board[F7];
-	key += 9 * board[G6];
-	key += 27 * board[H5];
+key = board[E8];
+key += 3 * board[F7];
+key += 9 * board[G6];
+key += 27 * board[H5];
 
-	sym_key = convert_index_sym(key, dia5_convert_table);
-	if (key > sym_key)
-	{
-		key = sym_key;
-	}
+sym_key = convert_index_sym(key, dia5_convert_table);
+if (key > sym_key)
+{
+key = sym_key;
+}
 
-	keyIndex[3] = key;
-	diag5cnt[key]++;
+keyIndex[3] = key;
+diag5cnt[key]++;
 
 }
 */
@@ -868,16 +871,16 @@ void write_edge(USHORT *keyIndex, int *board)
 	keyIndex[0] = key;
 	edgecnt[key]++;
 
-	key = board[H1];
-	key += 3 * board[H2];
-	key += 9 * board[H3];
-	key += 27 * board[H4];
-	key += 81 * board[H5];
-	key += 243 * board[H6];
-	key += 729 * board[H7];
-	key += 2187 * board[H8];
-	key += 6561 * board[G2];
-	key += 19683 * board[G7];
+	key = board[H8];
+	key += 3 * board[H7];
+	key += 9 * board[H6];
+	key += 27 * board[H5];
+	key += 81 * board[H4];
+	key += 243 * board[H3];
+	key += 729 * board[H2];
+	key += 2187 * board[H1];
+	key += 6561 * board[G7];
+	key += 19683 * board[G2];
 
 	sym_key = convert_index_sym(key, edge_convert_table);
 	if (key > sym_key)
@@ -888,16 +891,16 @@ void write_edge(USHORT *keyIndex, int *board)
 	keyIndex[1] = key;
 	edgecnt[key]++;
 
-	key = board[A1];
-	key += 3 * board[B1];
-	key += 9 * board[C1];
-	key += 27 * board[D1];
-	key += 81 * board[E1];
-	key += 243 * board[F1];
-	key += 729 * board[G1];
-	key += 2187 * board[H1];
-	key += 6561 * board[B2];
-	key += 19683 * board[G2];
+	key = board[H1];
+	key += 3 * board[G1];
+	key += 9 * board[F1];
+	key += 27 * board[E1];
+	key += 81 * board[D1];
+	key += 243 * board[C1];
+	key += 729 * board[B1];
+	key += 2187 * board[A1];
+	key += 6561 * board[G2];
+	key += 19683 * board[B2];
 
 	sym_key = convert_index_sym(key, edge_convert_table);
 	if (key > sym_key)
@@ -1129,13 +1132,13 @@ void write_corner3_3(USHORT *keyIndex, int *board)
 	cor33cnt[key]++;
 
 	key = board[H1];
-	key += 3 * board[H2];
-	key += 9 * board[H3];
-	key += 27 * board[G1];
+	key += 3 * board[G1];
+	key += 9 * board[F1];
+	key += 27 * board[H2];
 	key += 81 * board[G2];
-	key += 243 * board[G3];
-	key += 729 * board[F1];
-	key += 2187 * board[F2];
+	key += 243 * board[F2];
+	key += 729 * board[H3];
+	key += 2187 * board[G3];
 	key += 6561 * board[F3];
 
 	sym_key = convert_index_sym(key, corner3_3_convert_table);
@@ -1148,13 +1151,13 @@ void write_corner3_3(USHORT *keyIndex, int *board)
 	cor33cnt[key]++;
 
 	key = board[A8];
-	key += 3 * board[A7];
-	key += 9 * board[A6];
-	key += 27 * board[B8];
+	key += 3 * board[B8];
+	key += 9 * board[C8];
+	key += 27 * board[A7];
 	key += 81 * board[B7];
-	key += 243 * board[B6];
-	key += 729 * board[C8];
-	key += 2187 * board[C7];
+	key += 243 * board[C7];
+	key += 729 * board[A6];
+	key += 2187 * board[B6];
 	key += 6561 * board[C6];
 
 	sym_key = convert_index_sym(key, corner3_3_convert_table);
@@ -1329,15 +1332,15 @@ void write_triangle(USHORT *keyIndex, int *board)
 	trianglecnt[key]++;
 
 	key = board[H1];
-	key += 3 * board[H2];
-	key += 9 * board[H3];
-	key += 27 * board[H4];
-	key += 81 * board[G1];
+	key += 3 * board[G1];
+	key += 9 * board[F1];
+	key += 27 * board[E1];
+	key += 81 * board[H2];
 	key += 243 * board[G2];
-	key += 729 * board[G3];
-	key += 2187 * board[F1];
-	key += 6561 * board[F2];
-	key += 19683 * board[E1];
+	key += 729 * board[F2];
+	key += 2187 * board[H3];
+	key += 6561 * board[G3];
+	key += 19683 * board[H4];
 
 	sym_key = convert_index_sym(key, triangle_convert_table);
 	if (key > sym_key)
@@ -1348,15 +1351,15 @@ void write_triangle(USHORT *keyIndex, int *board)
 	trianglecnt[key]++;
 
 	key = board[A8];
-	key += 3 * board[A7];
-	key += 9 * board[A6];
-	key += 27 * board[A5];
-	key += 81 * board[B8];
+	key += 3 * board[B8];
+	key += 9 * board[C8];
+	key += 27 * board[D8];
+	key += 81 * board[A7];
 	key += 243 * board[B7];
-	key += 729 * board[B6];
-	key += 2187 * board[C8];
-	key += 6561 * board[C7];
-	key += 19683 * board[D8];
+	key += 729 * board[C7];
+	key += 2187 * board[A6];
+	key += 6561 * board[B6];
+	key += 19683 * board[A5];
 
 	sym_key = convert_index_sym(key, triangle_convert_table);
 	if (key > sym_key)
@@ -1441,74 +1444,78 @@ int ConvertWhorMoveToNum(char whorData)
 	return (((whorData % 10) - 1) * 8) + ((whorData / 10) - 1);
 }
 
+
+
+INT32 checkMove(UINT64 *bk, UINT64 *wh, int color, INT32 move)
+{
+	INT32  ret;
+	UINT64 rev, l_bk, l_wh;
+
+	l_bk = *bk;
+	l_wh = *wh;
+
+	ret = 0;
+
+	if (color == WHITE) swap(&l_bk, &l_wh);
+
+	rev = GetRev[move](l_bk, l_wh);
+	/* 黒パス？ */
+	if (rev == 0)
+	{
+		ret = -1;
+	}
+	else
+	{
+		l_bk ^= ((1ULL << move) | rev);
+		l_wh ^= rev;
+	}
+	
+	if (ret == 0)
+	{
+		if (color == BLACK)
+		{
+			*bk = l_bk;
+			*wh = l_wh;
+		}
+		else
+		{
+			*bk = l_wh;
+			*wh = l_bk;
+		}
+	}
+	
+
+	return ret;
+}
+
+
+
+
 int getFeatureIndex(USHORT* keyIndex, char* whorData, int stage, char *t)
 {
 	int color = BLACK;
 	int move;
 	int offset = 0;
 	UINT64 bk = FIRST_BK, wh = FIRST_WH;
-	UINT64 rev;
+	UINT32 bk_mob;
 
 	// ゲームヘッダから石差を取得
+	t[0] = whorData[7] - 32; // 黒石の最善値個数(Thorフォーマット:ここだと得点なので-32する)
+	whorData = &whorData[8];
+
 	int i;
-	for (i = 1; i < stage + 2; i++)
+	for (i = 0; i <= stage; i++)
 	{
 		move = ConvertWhorMoveToNum(whorData[i]);
 		if (move == -1)
 		{
 			continue;
 		}
-		if (color == BLACK)
+
+		if (i == stage)
 		{
-			rev = GetRev[move](bk, wh);
-			/* 黒パス？ */
-			if (rev == 0)
-			{
-				rev = GetRev[move](wh, bk);
-				/* 一応合法手になっているかのチェック */
-				if (rev == 0)
-				{
-					break;
-				}
-				bk ^= rev;
-				wh ^= ((1ULL << move) | rev);
-			}
-			else
-			{
-				bk ^= ((1ULL << move) | rev);
-				wh ^= rev;
-				color ^= 1;
-			}
-		}
-		else
-		{
-			rev = GetRev[move](wh, bk);
-			/* 白パス？ */
-			if (rev == 0)
-			{
-				rev = GetRev[move](bk, wh);
-				/* 一応合法手になっているかのチェック */
-				if (rev == 0)
-				{
-					break;
-				}
-				bk ^= ((1ULL << move) | rev);
-				wh ^= rev;
-			}
-			else
-			{
-				bk ^= rev;
-				wh ^= ((1ULL << move) | rev);
-				color ^= 1;
-			}
-		}
-
-
-		if (i == stage + 1){
-
 			// 石差
-			int board[64] = { 0 };
-			*t = whorData[0] - 32;
+			int board[64];
 			init_index_board(board, bk, wh);
 
 			write_h_ver1(&keyIndex[offset + 0], board);
@@ -1519,30 +1526,40 @@ int getFeatureIndex(USHORT* keyIndex, char* whorData, int stage, char *t)
 			write_dia_ver3(&keyIndex[offset + 18], board);
 			write_dia_ver4(&keyIndex[offset + 22], board);
 			write_edge(&keyIndex[offset + 26], board);
-			write_corner5_2(&keyIndex[offset + 34], board);
+			write_corner5_2(&keyIndex[offset + 30], board);
 			write_corner3_3(&keyIndex[offset + 38], board);
 			write_triangle(&keyIndex[offset + 42], board);
-
-			UINT32 bk_mob, wh_mob;
 			CreateMoves(bk, wh, &bk_mob);
-			CreateMoves(wh, bk, &wh_mob);
-			bk_mob = bk_mob - wh_mob + (MOBILITY_NUM / 2);
+			//CreateMoves(wh, bk, &wh_mob);
+			//bk_mob = bk_mob - wh_mob + (MOBILITY_NUM / 2);
 			keyIndex[offset + 46] = bk_mob;
-			mobcnt[bk_mob]++;
-
-			write_parity(&keyIndex[offset + 47], ~(bk | wh));
-
+			mobcnt[0]++;
+			//write_parity(&keyIndex[offset + 47], ~(bk | wh));
 			offset += PATTERN_NUM;
 		}
 
+		if (checkMove(&bk, &wh, color, move) == -1)
+		{
+			color ^= 1;
+			if (checkMove(&bk, &wh, color, move) == -1)
+			{
+				offset = -1;
+				break;
+			}
+		}
+		color ^= 1;
+
 	}
 
-	if (i < stage + 1){
+	if (i < stage){
 		return -1;
 	}
 
 	return offset;
 }
+
+
+
 
 int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 {
@@ -1550,11 +1567,18 @@ int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 	int move;
 	int byteCounter = 0;
 	UINT64 bk = FIRST_BK, wh = FIRST_WH;
-	UINT64 rev;
+	UINT32 bk_mob;
 	bool badFlag = false;
 	int turn = 0;
 	int offset = 0;
-	UINT32 temp;
+
+	char *endPtr;
+	char *line = strtok_s(kifuData, " ", &endPtr);
+	char *score = strtok_s(NULL, " ", &endPtr);
+	char *random = strtok_s(NULL, " ", &endPtr);
+
+	// 無効なステージかチェック
+	if (strtol(random, NULL, 10) > 10 && stage < turn) return -1; // 序盤ランダム１０手は考慮しない
 
 	while (1)
 	{
@@ -1563,13 +1587,12 @@ int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 		}
 
 		/* 英字を読み込む */
-		/* オシマイ */
 		if (!isalpha(kifuData[byteCounter]))
 		{
+
 			break;
 		}
 		/* 数字を読み込む */
-		/* なぜかおかしな棋譜データが結構ある */
 		if (!isdigit(kifuData[byteCounter + 1]))
 		{
 			badFlag = true;
@@ -1577,6 +1600,7 @@ int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 		}
 
 		move = ((kifuData[byteCounter] - 'A') * 8) + (kifuData[byteCounter + 1] - '1');
+#if 1
 		/* a9 とか明らかに間違った手を含んでいる棋譜がある */
 		if (move < 0 || move >= 64)
 		{
@@ -1589,53 +1613,7 @@ int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 			badFlag = true;
 			break;
 		}
-
-		if (color == BLACK)
-		{
-			rev = GetRev[move](bk, wh);
-			/* 黒パス？ */
-			if (rev == 0)
-			{
-				rev = GetRev[move](wh, bk);
-				/* 一応合法手になっているかのチェック */
-				if (rev == 0)
-				{
-					badFlag = true;
-					break;
-				}
-				bk ^= rev;
-				wh ^= ((1ULL << move) | rev);
-			}
-			else
-			{
-				bk ^= ((1ULL << move) | rev);
-				wh ^= rev;
-				color ^= 1;
-			}
-		}
-		else
-		{
-			rev = GetRev[move](wh, bk);
-			/* 白パス？ */
-			if (rev == 0)
-			{
-				rev = GetRev[move](bk, wh);
-				/* 一応合法手になっているかのチェック */
-				if (rev == 0)
-				{
-					badFlag = true;
-					break;
-				}
-				bk ^= ((1ULL << move) | rev);
-				wh ^= rev;
-			}
-			else
-			{
-				bk ^= rev;
-				wh ^= ((1ULL << move) | rev);
-				color ^= 1;
-			}
-		}
+#endif
 
 		/* 対局データ生成 */
 		if (turn == stage)
@@ -1654,31 +1632,77 @@ int getFeatureIndex2(char* t, USHORT* keyIndex, char* kifuData, int stage)
 			write_corner5_2(&keyIndex[offset + 30], board);
 			write_corner3_3(&keyIndex[offset + 38], board);
 			write_triangle(&keyIndex[offset + 42], board);
-#if 0
-			UINT32 bk_mob, wh_mob;
+#if 1
 			CreateMoves(bk, wh, &bk_mob);
-			CreateMoves(wh, bk, &wh_mob);
+			//CreateMoves(wh, bk, &wh_mob);
 			//bk_mob = bk_mob - wh_mob + (MOBILITY_NUM / 2);
-			SHORT mob = bk_mob;
-			keyIndex[offset + 46] = (USHORT)mob;
+			keyIndex[offset + 46] = bk_mob;
 			mobcnt[bk_mob]++;
+			//write_parity(&keyIndex[offset + 47], ~(bk | wh));
 #endif
-			write_parity(&keyIndex[offset + 46], ~(bk | wh));
-			offset += PATTERN_NUM;
+
+			offset = PATTERN_NUM;
 
 		}
 
+		if (checkMove(&bk, &wh, color, move) == -1)
+		{
+			color ^= 1;
+			if (checkMove(&bk, &wh, color, move) == -1)
+			{
+				badFlag = true;
+				offset = 0;
+				break;
+			}
+		}
+
+		color ^= 1;
 		byteCounter += 2;
 		turn++;
 	}
 
-	if (turn <= stage || badFlag == true)
+	/* 対局データ生成 */
+	if (turn == 60)
+	{
+		int board[64];
+		init_index_board(board, bk, wh);
+
+		write_h_ver1(&keyIndex[offset + 0], board);
+		write_h_ver2(&keyIndex[offset + 4], board);
+		write_h_ver3(&keyIndex[offset + 8], board);
+		write_dia_ver1(&keyIndex[offset + 12], board);
+		write_dia_ver2(&keyIndex[offset + 14], board);
+		write_dia_ver3(&keyIndex[offset + 18], board);
+		write_dia_ver4(&keyIndex[offset + 22], board);
+		write_edge(&keyIndex[offset + 26], board);
+		write_corner5_2(&keyIndex[offset + 30], board);
+		write_corner3_3(&keyIndex[offset + 38], board);
+		write_triangle(&keyIndex[offset + 42], board);
+#if 1
+		CreateMoves(bk, wh, &bk_mob);
+		//CreateMoves(wh, bk, &wh_mob);
+		//bk_mob = bk_mob - wh_mob + (MOBILITY_NUM / 2);
+		keyIndex[offset + 46] = bk_mob;
+		mobcnt[bk_mob]++;
+		//write_parity(&keyIndex[offset + 47], ~(bk | wh));
+#endif
+
+		offset = PATTERN_NUM;
+
+	}
+
+	if ((turn != 60 && turn <= stage) || badFlag == true)
 	{
 		return -1;
 	}
 	else
 	{
-		*t = CountBit(bk) - CountBit(wh);
+		t[0] = CountBit(bk) - CountBit(wh);
+		if (t[0] != strtol(score, NULL, 10))
+		{
+			printf("score error!!!\n");
+		}
+		//t[0] = strtol(&kifuData[strlen(kifuData) - 6], NULL, 10);
 	}
 
 	return offset;
@@ -1689,53 +1713,47 @@ int convertWtbToAscii(char* t, USHORT* keyIndex, int stage)
 {
 	char buf[6800], file_name[64];
 	FILE *rfp;
-	int read_len, error, count = 0, index_count = 0;
+	UINT64 read_len;
+	int error, count = 0;
 	int ret;
 
-	for (int i = 1976;; i++){
+	//for (int i = 1976;; i++){
 
-		sprintf_s(file_name, "kifu\\WTH_%d.wtb", i);
-		if ((error = fopen_s(&rfp, file_name, "rb")) != 0){
-			break;
-		}
+	sprintf_s(file_name, "kifu\\edax-pvbook_2009.wtb");
+	if ((error = fopen_s(&rfp, file_name, "rb")) != 0){
+		return count;
+	}
 
-		fread(buf, sizeof(char), 16, rfp); //ヘッダ読み捨て
-		while ((read_len = fread(buf, sizeof(char), 6800, rfp)) != 0)
+	fread(buf, sizeof(char), 16, rfp); //ヘッダ読み捨て
+	while ((read_len = fread(buf, sizeof(char), 6800, rfp)) != 0)
+	{
+		for (int i = 0; i < read_len / 68; i++)
 		{
-			for (int i = 0; i < read_len / 68; i++)
+			// ステージごとのパターンを抽出
+			ret = getFeatureIndex(&keyIndex[count * PATTERN_NUM], &buf[i * 68], stage, &t[count]);
+			if (ret != -1)
 			{
-				// 白除去インデックスの棋譜はスルー
-				//for (int cnt = 0; cnt < sizeof(rand_index_array) / sizeof(int); cnt++){
-				//	if (index_count == rand_index_array[cnt]){
-				//		//printf("skip kifu...\n");
-				//		wh_win--;
-				//		index_count++;
-				//		continue;
-				//	}
-				//}
-				// ステージごとのパターンを抽出
-				ret = getFeatureIndex(&keyIndex[count* PATTERN_NUM], &buf[i * 68 + 7], stage, &t[count]);
 				count++;
-
-				index_count++;
 			}
-
 		}
-
-		fclose(rfp);
 
 	}
+
+	fclose(rfp);
+
+	//}
 	return count;
 }
 
 int convertKifuToAscii(char* t, USHORT* keyIndex, int stage)
 {
-	char buf[512], file_name[64];
+	char buf[512];
+	//char name[32];
 	FILE *rfp;
-	int error, count = 0, index_count = game_num1;
-	int offset, ret;
+	int error, count = 0;
+	int ret;
 
-	if ((error = fopen_s(&rfp, "kifu\\kifu.dat", "rb")) != 0){
+	if ((error = fopen_s(&rfp, "kifu\\all.kif", "r")) != 0){
 		return -1;
 	}
 
@@ -1753,15 +1771,44 @@ int convertKifuToAscii(char* t, USHORT* keyIndex, int stage)
 		if (ret != -1)
 		{
 			count++;
-			index_count++;
 		}
 	}
 
 	fclose(rfp);
 
-	return count;
 
 #if 0
+	for (int i = 0; i < 74; i++)
+	{
+		sprintf_s(name, "kifu\\%02dE4.gam.%d.new", i / 2 + 1, (i % 2) + 1);
+		if ((error = fopen_s(&rfp, name, "r")) != 0) {
+			return -1;
+		}
+
+		// example
+		// F5D6C3D3C4F4C5B3C2B4 E3E6C6F6～(略)～H5H8H7 0
+		while (fgets(buf, 512, rfp) != NULL)
+		{
+			ret = getFeatureIndex2(&t[count], &keyIndex[count * PATTERN_NUM], buf, stage);
+
+			// 石差を取得
+			if (t[count] < -64 || t[count] > 64) {
+				printf("assert!!! st1ULL diff over at %d\n", count);
+				exit(1);
+			}
+			if (ret != -1)
+			{
+				count++;
+				index_count++;
+			}
+		}
+		//printf("count = %d\n", count);
+		fclose(rfp);
+	}
+
+
+	return count;
+
 	for (int i = 1;; i++){
 
 		sprintf_s(file_name, "kifu\\%02dE4.gam.%d.new", (i + 1) / 2, ((i - 1) % 2) + 1);
@@ -1790,7 +1837,7 @@ int convertKifuToAscii(char* t, USHORT* keyIndex, int stage)
 
 	}
 #endif
-
+	return count;
 }
 
 void writeTable(char *file_name, int stage)
@@ -1805,59 +1852,59 @@ void writeTable(char *file_name, int stage)
 	int i;
 	for (i = 0; i < 6561; i++)
 	{
-		fprintf(fp, "%lf\n", hori_ver1_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(hori_ver1_data[stage][i] * 10000));
 	}
 	for (i = 0; i < 6561; i++)
 	{
-		fprintf(fp, "%lf\n", hori_ver2_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(hori_ver2_data[stage][i] * 10000));
 	}
 	for (i = 0; i < 6561; i++)
 	{
-		fprintf(fp, "%lf\n", hori_ver3_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(hori_ver3_data[stage][i] * 10000));
 	}
 	for (i = 0; i < 6561; i++)
 	{
-		fprintf(fp, "%lf\n", dia_ver1_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(dia_ver1_data[stage][i] * 10000));
 	}
 	for (i = 0; i < 2187; i++)
 	{
-		fprintf(fp, "%lf\n", dia_ver2_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(dia_ver2_data[stage][i] * 10000));
 	}
 	for (i = 0; i < 729; i++)
 	{
-		fprintf(fp, "%lf\n", dia_ver3_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(dia_ver3_data[stage][i] * 10000));
 	}
 	for (i = 0; i < 243; i++)
 	{
-		fprintf(fp, "%lf\n", dia_ver4_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(dia_ver4_data[stage][i] * 10000));
 	}
 	for (i = 0; i < 59049; i++)
 	{
-		fprintf(fp, "%lf\n", edge_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(edge_data[stage][i] * 10000));
 	}
 	for (i = 0; i < 59049; i++)
 	{
-		fprintf(fp, "%lf\n", corner5_2_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(corner5_2_data[stage][i] * 10000));
 	}
 	for (i = 0; i < 19683; i++)
 	{
-		fprintf(fp, "%lf\n", corner3_3_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(corner3_3_data[stage][i] * 10000));
 	}
 	for (i = 0; i < 59049; i++)
 	{
-		fprintf(fp, "%lf\n", triangle_data[0][stage][i]);
+		fprintf(fp, "%d\n", (INT32)(triangle_data[stage][i] * 10000));
 	}
+	fprintf(fp, "%d\n", (INT32)(constant_data[stage] * 10000));
 #if 0
 	for (i = 0; i < MOBILITY_NUM; i++)
 	{
-		fprintf(fp, "%lf\n", mobility_data[stage][i]);
+		fprintf(fp, "%.4lf\n", mobility_data[stage][i]);
 	}
-#endif
 	for (i = 0; i < PARITY_NUM; i++)
 	{
-		fprintf(fp, "%lf\n", parity_data[0][stage][i]);
+		fprintf(fp, "%lf\n", parity_data[stage][i]);
 	}
-
+#endif
 	fclose(fp);
 }
 
@@ -1897,232 +1944,224 @@ double culcSum(USHORT* keyIndex, int stage)
 	double eval = 0;
 	int counter = 0;
 
-	eval += hori_ver1_data[0][stage][keyIndex[counter++]];
-	eval += hori_ver1_data[0][stage][keyIndex[counter++]];
-	eval += hori_ver1_data[0][stage][keyIndex[counter++]];
-	eval += hori_ver1_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver1_data[stage][keyIndex[counter++]];
+	eval += hori_ver1_data[stage][keyIndex[counter++]];
+	eval += hori_ver1_data[stage][keyIndex[counter++]];
+	eval += hori_ver1_data[stage][keyIndex[counter++]];
 
-	eval += hori_ver2_data[0][stage][keyIndex[counter++]];
-	eval += hori_ver2_data[0][stage][keyIndex[counter++]];
-	eval += hori_ver2_data[0][stage][keyIndex[counter++]];
-	eval += hori_ver2_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver2_data[stage][keyIndex[counter++]];
+	eval += hori_ver2_data[stage][keyIndex[counter++]];
+	eval += hori_ver2_data[stage][keyIndex[counter++]];
+	eval += hori_ver2_data[stage][keyIndex[counter++]];
 
-	eval += hori_ver3_data[0][stage][keyIndex[counter++]];
-	eval += hori_ver3_data[0][stage][keyIndex[counter++]];
-	eval += hori_ver3_data[0][stage][keyIndex[counter++]];
-	eval += hori_ver3_data[0][stage][keyIndex[counter++]];
+	eval += hori_ver3_data[stage][keyIndex[counter++]];
+	eval += hori_ver3_data[stage][keyIndex[counter++]];
+	eval += hori_ver3_data[stage][keyIndex[counter++]];
+	eval += hori_ver3_data[stage][keyIndex[counter++]];
 
-	eval += dia_ver1_data[0][stage][keyIndex[counter++]];
-	eval += dia_ver1_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver1_data[stage][keyIndex[counter++]];
+	eval += dia_ver1_data[stage][keyIndex[counter++]];
 
-	eval += dia_ver2_data[0][stage][keyIndex[counter++]];
-	eval += dia_ver2_data[0][stage][keyIndex[counter++]];
-	eval += dia_ver2_data[0][stage][keyIndex[counter++]];
-	eval += dia_ver2_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver2_data[stage][keyIndex[counter++]];
+	eval += dia_ver2_data[stage][keyIndex[counter++]];
+	eval += dia_ver2_data[stage][keyIndex[counter++]];
+	eval += dia_ver2_data[stage][keyIndex[counter++]];
 
-	eval += dia_ver3_data[0][stage][keyIndex[counter++]];
-	eval += dia_ver3_data[0][stage][keyIndex[counter++]];
-	eval += dia_ver3_data[0][stage][keyIndex[counter++]];
-	eval += dia_ver3_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver3_data[stage][keyIndex[counter++]];
+	eval += dia_ver3_data[stage][keyIndex[counter++]];
+	eval += dia_ver3_data[stage][keyIndex[counter++]];
+	eval += dia_ver3_data[stage][keyIndex[counter++]];
 
-	eval += dia_ver4_data[0][stage][keyIndex[counter++]];
-	eval += dia_ver4_data[0][stage][keyIndex[counter++]];
-	eval += dia_ver4_data[0][stage][keyIndex[counter++]];
-	eval += dia_ver4_data[0][stage][keyIndex[counter++]];
+	eval += dia_ver4_data[stage][keyIndex[counter++]];
+	eval += dia_ver4_data[stage][keyIndex[counter++]];
+	eval += dia_ver4_data[stage][keyIndex[counter++]];
+	eval += dia_ver4_data[stage][keyIndex[counter++]];
 
-	eval += edge_data[0][stage][keyIndex[counter++]];
-	eval += edge_data[0][stage][keyIndex[counter++]];
-	eval += edge_data[0][stage][keyIndex[counter++]];
-	eval += edge_data[0][stage][keyIndex[counter++]];
+	eval += edge_data[stage][keyIndex[counter++]];
+	eval += edge_data[stage][keyIndex[counter++]];
+	eval += edge_data[stage][keyIndex[counter++]];
+	eval += edge_data[stage][keyIndex[counter++]];
 
-	eval += corner5_2_data[0][stage][keyIndex[counter++]];
-	eval += corner5_2_data[0][stage][keyIndex[counter++]];
-	eval += corner5_2_data[0][stage][keyIndex[counter++]];
-	eval += corner5_2_data[0][stage][keyIndex[counter++]];
-	eval += corner5_2_data[0][stage][keyIndex[counter++]];
-	eval += corner5_2_data[0][stage][keyIndex[counter++]];
-	eval += corner5_2_data[0][stage][keyIndex[counter++]];
-	eval += corner5_2_data[0][stage][keyIndex[counter++]];
+	eval += corner5_2_data[stage][keyIndex[counter++]];
+	eval += corner5_2_data[stage][keyIndex[counter++]];
+	eval += corner5_2_data[stage][keyIndex[counter++]];
+	eval += corner5_2_data[stage][keyIndex[counter++]];
+	eval += corner5_2_data[stage][keyIndex[counter++]];
+	eval += corner5_2_data[stage][keyIndex[counter++]];
+	eval += corner5_2_data[stage][keyIndex[counter++]];
+	eval += corner5_2_data[stage][keyIndex[counter++]];
 
-	eval += corner3_3_data[0][stage][keyIndex[counter++]];
-	eval += corner3_3_data[0][stage][keyIndex[counter++]];
-	eval += corner3_3_data[0][stage][keyIndex[counter++]];
-	eval += corner3_3_data[0][stage][keyIndex[counter++]];
+	eval += corner3_3_data[stage][keyIndex[counter++]];
+	eval += corner3_3_data[stage][keyIndex[counter++]];
+	eval += corner3_3_data[stage][keyIndex[counter++]];
+	eval += corner3_3_data[stage][keyIndex[counter++]];
 
-	eval += triangle_data[0][stage][keyIndex[counter++]];
-	eval += triangle_data[0][stage][keyIndex[counter++]];
-	eval += triangle_data[0][stage][keyIndex[counter++]];
-	eval += triangle_data[0][stage][keyIndex[counter++]];
+	eval += triangle_data[stage][keyIndex[counter++]];
+	eval += triangle_data[stage][keyIndex[counter++]];
+	eval += triangle_data[stage][keyIndex[counter++]];
+	eval += triangle_data[stage][keyIndex[counter++]];
 
-	eval += parity_data[0][stage][keyIndex[counter]];
+	eval += constant_data[stage];
+	//eval += mobility_data[stage][keyIndex[counter]];
+	//eval += parity_data[stage][keyIndex[counter]];
 
 	return eval;
 }
 
-void culc_d_data(USHORT* keyIndex, double error)
+void culc_d_data(USHORT* keyIndex, double error, double b_error)
 {
 	double eval = 0;
 	int counter = 0;
 
-	hori_ver1_data_d[keyIndex[counter++]] += error;
-	hori_ver1_data_d[keyIndex[counter++]] += error;
-	hori_ver1_data_d[keyIndex[counter++]] += error;
-	hori_ver1_data_d[keyIndex[counter++]] += error;
+	hori_ver1_data_d[keyIndex[counter++]] += error + b_error;
+	hori_ver1_data_d[keyIndex[counter++]] += error + b_error;
+	hori_ver1_data_d[keyIndex[counter++]] += error + b_error;
+	hori_ver1_data_d[keyIndex[counter++]] += error + b_error;
 
-	hori_ver2_data_d[keyIndex[counter++]] += error;
-	hori_ver2_data_d[keyIndex[counter++]] += error;
-	hori_ver2_data_d[keyIndex[counter++]] += error;
-	hori_ver2_data_d[keyIndex[counter++]] += error;
+	hori_ver2_data_d[keyIndex[counter++]] += error + b_error;
+	hori_ver2_data_d[keyIndex[counter++]] += error + b_error;
+	hori_ver2_data_d[keyIndex[counter++]] += error + b_error;
+	hori_ver2_data_d[keyIndex[counter++]] += error + b_error;
 
-	hori_ver3_data_d[keyIndex[counter++]] += error;
-	hori_ver3_data_d[keyIndex[counter++]] += error;
-	hori_ver3_data_d[keyIndex[counter++]] += error;
-	hori_ver3_data_d[keyIndex[counter++]] += error;
+	hori_ver3_data_d[keyIndex[counter++]] += error + b_error;
+	hori_ver3_data_d[keyIndex[counter++]] += error + b_error;
+	hori_ver3_data_d[keyIndex[counter++]] += error + b_error;
+	hori_ver3_data_d[keyIndex[counter++]] += error + b_error;
 
-	dia_ver1_data_d[keyIndex[counter++]] += error;
-	dia_ver1_data_d[keyIndex[counter++]] += error;
+	dia_ver1_data_d[keyIndex[counter++]] += error + b_error;
+	dia_ver1_data_d[keyIndex[counter++]] += error + b_error;
 
-	dia_ver2_data_d[keyIndex[counter++]] += error;
-	dia_ver2_data_d[keyIndex[counter++]] += error;
-	dia_ver2_data_d[keyIndex[counter++]] += error;
-	dia_ver2_data_d[keyIndex[counter++]] += error;
+	dia_ver2_data_d[keyIndex[counter++]] += error + b_error;
+	dia_ver2_data_d[keyIndex[counter++]] += error + b_error;
+	dia_ver2_data_d[keyIndex[counter++]] += error + b_error;
+	dia_ver2_data_d[keyIndex[counter++]] += error + b_error;
 
-	dia_ver3_data_d[keyIndex[counter++]] += error;
-	dia_ver3_data_d[keyIndex[counter++]] += error;
-	dia_ver3_data_d[keyIndex[counter++]] += error;
-	dia_ver3_data_d[keyIndex[counter++]] += error;
+	dia_ver3_data_d[keyIndex[counter++]] += error + b_error;
+	dia_ver3_data_d[keyIndex[counter++]] += error + b_error;
+	dia_ver3_data_d[keyIndex[counter++]] += error + b_error;
+	dia_ver3_data_d[keyIndex[counter++]] += error + b_error;
 
-	dia_ver4_data_d[keyIndex[counter++]] += error;
-	dia_ver4_data_d[keyIndex[counter++]] += error;
-	dia_ver4_data_d[keyIndex[counter++]] += error;
-	dia_ver4_data_d[keyIndex[counter++]] += error;
+	dia_ver4_data_d[keyIndex[counter++]] += error + b_error;
+	dia_ver4_data_d[keyIndex[counter++]] += error + b_error;
+	dia_ver4_data_d[keyIndex[counter++]] += error + b_error;
+	dia_ver4_data_d[keyIndex[counter++]] += error + b_error;
 
-	edge_data_d[keyIndex[counter++]] += error;
-	edge_data_d[keyIndex[counter++]] += error;
-	edge_data_d[keyIndex[counter++]] += error;
-	edge_data_d[keyIndex[counter++]] += error;
+	edge_data_d[keyIndex[counter++]] += error + b_error;
+	edge_data_d[keyIndex[counter++]] += error + b_error;
+	edge_data_d[keyIndex[counter++]] += error + b_error;
+	edge_data_d[keyIndex[counter++]] += error + b_error;
 
-	corner5_2_data_d[keyIndex[counter++]] += error;
-	corner5_2_data_d[keyIndex[counter++]] += error;
-	corner5_2_data_d[keyIndex[counter++]] += error;
-	corner5_2_data_d[keyIndex[counter++]] += error;
-	corner5_2_data_d[keyIndex[counter++]] += error;
-	corner5_2_data_d[keyIndex[counter++]] += error;
-	corner5_2_data_d[keyIndex[counter++]] += error;
-	corner5_2_data_d[keyIndex[counter++]] += error;
+	corner5_2_data_d[keyIndex[counter++]] += error + b_error;
+	corner5_2_data_d[keyIndex[counter++]] += error + b_error;
+	corner5_2_data_d[keyIndex[counter++]] += error + b_error;
+	corner5_2_data_d[keyIndex[counter++]] += error + b_error;
+	corner5_2_data_d[keyIndex[counter++]] += error + b_error;
+	corner5_2_data_d[keyIndex[counter++]] += error + b_error;
+	corner5_2_data_d[keyIndex[counter++]] += error + b_error;
+	corner5_2_data_d[keyIndex[counter++]] += error + b_error;
 
-	corner3_3_data_d[keyIndex[counter++]] += error;
-	corner3_3_data_d[keyIndex[counter++]] += error;
-	corner3_3_data_d[keyIndex[counter++]] += error;
-	corner3_3_data_d[keyIndex[counter++]] += error;
+	corner3_3_data_d[keyIndex[counter++]] += error + b_error;
+	corner3_3_data_d[keyIndex[counter++]] += error + b_error;
+	corner3_3_data_d[keyIndex[counter++]] += error + b_error;
+	corner3_3_data_d[keyIndex[counter++]] += error + b_error;
 
-	triangle_data_d[keyIndex[counter++]] += error;
-	triangle_data_d[keyIndex[counter++]] += error;
-	triangle_data_d[keyIndex[counter++]] += error;
-	triangle_data_d[keyIndex[counter++]] += error;
+	triangle_data_d[keyIndex[counter++]] += error + b_error;
+	triangle_data_d[keyIndex[counter++]] += error + b_error;
+	triangle_data_d[keyIndex[counter++]] += error + b_error;
+	triangle_data_d[keyIndex[counter++]] += error + b_error;
 
-	//mobility_data_d[0] += error * (SHORT)keyIndex[counter++];
-	parity_data_d[keyIndex[counter++]] += error;
+	constant_data_d += error + b_error;
+	//mobility_data_d[keyIndex[counter]] += (error + b_error);
+	//parity_data_d[keyIndex[counter]] += error + b_error;
 
 }
 
-void culc_weight(double scale, int stage)
+void culc_weight(double scale, int stage, int n_sample)
 {
 	int i;
 	for (i = 0; i < INDEX_NUM; i++)
 	{
-		hori_ver1_data[0][stage][i] += normalize(scale, hori1cnt[i], hori_ver1_data_d[i]);
+		hori_ver1_data[stage][i] += normalize(scale, hori1cnt[i], hori_ver1_data_d[i]) / n_sample;
 	}
 	for (i = 0; i < INDEX_NUM; i++)
 	{
-		hori_ver2_data[0][stage][i] += normalize(scale, hori2cnt[i], hori_ver2_data_d[i]);
+		hori_ver2_data[stage][i] += normalize(scale, hori2cnt[i], hori_ver2_data_d[i]) / n_sample;
 	}
 	for (i = 0; i < INDEX_NUM; i++)
 	{
-		hori_ver3_data[0][stage][i] += normalize(scale, hori3cnt[i], hori_ver3_data_d[i]);
+		hori_ver3_data[stage][i] += normalize(scale, hori3cnt[i], hori_ver3_data_d[i]) / n_sample;
 	}
 
 	for (i = 0; i < INDEX_NUM; i++)
 	{
-		dia_ver1_data[0][stage][i] += normalize(scale, diag1cnt[i], dia_ver1_data_d[i]);
+		dia_ver1_data[stage][i] += normalize(scale, diag1cnt[i], dia_ver1_data_d[i]) / n_sample;
 	}
 	for (i = 0; i < INDEX_NUM / 3; i++)
 	{
-		dia_ver2_data[0][stage][i] += normalize(scale, diag2cnt[i], dia_ver2_data_d[i]);
+		dia_ver2_data[stage][i] += normalize(scale, diag2cnt[i], dia_ver2_data_d[i]) / n_sample;
 	}
 	for (i = 0; i < INDEX_NUM / 9; i++)
 	{
-		dia_ver3_data[0][stage][i] += normalize(scale, diag3cnt[i], dia_ver3_data_d[i]);
+		dia_ver3_data[stage][i] += normalize(scale, diag3cnt[i], dia_ver3_data_d[i]) / n_sample;
 	}
 	for (i = 0; i < INDEX_NUM / 27; i++)
 	{
-		dia_ver4_data[0][stage][i] += normalize(scale, diag4cnt[i], dia_ver4_data_d[i]);
+		dia_ver4_data[stage][i] += normalize(scale, diag4cnt[i], dia_ver4_data_d[i]) / n_sample;
 	}
 
 	for (i = 0; i < INDEX_NUM * 9; i++)
 	{
-		edge_data[0][stage][i] += normalize(scale, edgecnt[i], edge_data_d[i]);
+		edge_data[stage][i] += normalize(scale, edgecnt[i], edge_data_d[i]) / n_sample;
 	}
 
 	for (i = 0; i < INDEX_NUM * 9; i++)
 	{
-		corner5_2_data[0][stage][i] += normalize(scale, cor52cnt[i], corner5_2_data_d[i]);
+		corner5_2_data[stage][i] += normalize(scale, cor52cnt[i], corner5_2_data_d[i]) / n_sample;
 	}
 
 	for (i = 0; i < INDEX_NUM * 3; i++)
 	{
-		corner3_3_data[0][stage][i] += normalize(scale, cor33cnt[i], corner3_3_data_d[i]);
+		corner3_3_data[stage][i] += normalize(scale, cor33cnt[i], corner3_3_data_d[i]) / n_sample;
 	}
 
 	for (i = 0; i < INDEX_NUM * 9; i++)
 	{
-		triangle_data[0][stage][i] += normalize(scale, trianglecnt[i], triangle_data_d[i]);
+		triangle_data[stage][i] += normalize(scale, trianglecnt[i], triangle_data_d[i]) / n_sample;
 	}
+
+	constant_data[stage] += normalize(scale, n_sample, constant_data_d) / n_sample;
+
 #if 0
 	for (i = 0; i < MOBILITY_NUM; i++)
 	{
-		mobility_data[stage][i] += 0;
+		mobility_data[stage][i] += normalize(scale, mobcnt[i], mobility_data_d[i]) / n_sample;
 	}
-#endif
 	for (i = 0; i < PARITY_NUM; i++)
 	{
-		parity_data[0][stage][i] += normalize(scale, paritycnt[i], parity_data_d[i]);
+		parity_data[stage][i] += normalize(scale, paritycnt[i], parity_data_d[i]) / n_sample;
 	}
-
+#endif
 }
 
 void Learning(char* t, USHORT* keyIndex, int sample_num, int stage)
 {
-	int i, k, l, maxloop = 1000;
-	int counter;
+	int k, l, maxloop = 1000;
 	double ave_error[2] = { 1000, 65536 };
-	double alpha = 4000, scalealpha = 0.006;
-	double func, deltafunc, error, et;
+	double scalealpha;
+	double error;
+	double *b_error;
 	double errorsum;
-
-
-	/* 評価パターンテーブル(おおもと) */
-#if 0
-	double hori_ver1_data[INDEX_NUM] = { 0 };
-	double hori_ver2_data[INDEX_NUM] = { 0 };
-	double hori_ver3_data[INDEX_NUM] = { 0 };
-	double dia_ver1_data[INDEX_NUM] = { 0 };
-	double dia_ver2_data[INDEX_NUM / 3] = { 0 };
-	double dia_ver3_data[INDEX_NUM / 9] = { 0 };
-	double dia_ver4_data[INDEX_NUM / 27] = { 0 };
-	double edge_data[INDEX_NUM * 9] = { 0 };
-	double corner5_2_data[INDEX_NUM * 9] = { 0 };
-	double corner3_3_data[INDEX_NUM * 3] = { 0 };
-	double triangle_data[INDEX_NUM * 9] = { 0 };
-	double mobility_data[MOBILITY_NUM] = { 0 };
-	double parity_data[PARITY_NUM] = { 0 };
-#endif
-
 	char table_file_name[64];
-	sprintf_s(table_file_name, "%d.dat", stage);
 
+	sprintf_s(table_file_name, "table\\%d.dat", stage);
+
+	b_error = (double *)malloc(sizeof(double) * sample_num);
+	memset(b_error, 0x00, sizeof(double) * sample_num);
+
+	
+	//printf("scale = %f\n", scalealpha);
 	/* 最急降下法 */
-	for (k = 0; k < maxloop && ave_error[1] - ave_error[0] >(ave_error[1] / (double)500); k++){
+	for (k = 0; (k < maxloop && ave_error[1] - ave_error[0] >(ave_error[1] / (double)1000)); k++){
 
 		// ベクトル初期化
 		memset(hori_ver1_data_d, 0, sizeof(hori_ver1_data_d));
@@ -2136,23 +2175,24 @@ void Learning(char* t, USHORT* keyIndex, int sample_num, int stage)
 		memset(corner5_2_data_d, 0, sizeof(corner5_2_data_d));
 		memset(corner3_3_data_d, 0, sizeof(corner3_3_data_d));
 		memset(triangle_data_d, 0, sizeof(triangle_data_d));
-		//memset(mobility_data_d, 0, sizeof(mobility_data_d));
-		memset(parity_data_d, 0, sizeof(parity_data_d));
+		memset(mobility_data_d, 0, sizeof(mobility_data_d));
+		//memset(parity_data_d, 0, sizeof(parity_data_d));
 
 		errorsum = 0;
-		deltafunc = 0;
-		counter = 0;
-
 		/* 局面ごとに誤差を計算 */
 		for (l = 0; l < sample_num; l++)
 		{
 			error = t[l] - culcSum(&keyIndex[l * PATTERN_NUM], stage);
-			culc_d_data(&keyIndex[l * PATTERN_NUM], error);
+			culc_d_data(&keyIndex[l * PATTERN_NUM], error, b_error[l]);
+			b_error[l] = error * 0.9;
 			errorsum += (error * error);
 		}
 
 		// 傾きベクトルからそれぞれの特徴の係数を計算
-		culc_weight(scalealpha, stage);
+		if(stage < 36) scalealpha = 30 * (stage + 1);
+		else scalealpha = 1000 - ((stage - 36) * 30);
+		culc_weight(scalealpha, stage, sample_num);
+
 
 		/* 平均誤差の出力 */
 		if (k % 10 == 0)
@@ -2160,10 +2200,18 @@ void Learning(char* t, USHORT* keyIndex, int sample_num, int stage)
 			ave_error[1] = ave_error[0];
 			ave_error[0] = errorsum / (double)(sample_num);
 			printf("averrage error = %f\n", ave_error[0]);
+			if (ave_error[0] >= ave_error[1]) goto END_LEARN;
 			writeTable(table_file_name, stage);
 		}
 	}
 
+	free(b_error);
+	return;
+
+END_LEARN:
+	free(b_error);
+	g_AbortFlag = TRUE;
+	return;
 }
 
 int culcEval()
@@ -2184,9 +2232,10 @@ int culcEval()
 	int stage = 0;
 	int sum_score = 0;
 	int rand_flag = FALSE;
-	char buf[16];
+	g_AbortFlag = FALSE;
 
-	while (stage < 60){
+	game_num1 = 0;
+	while (stage < 61){
 
 		printf("starting %d stage learning...\n", stage);
 		// 評価パターンテーブル初期化
@@ -2200,14 +2249,19 @@ int culcEval()
 
 		// wtbファイルの読み込みとAsciiへの変換
 		//game_num1 = convertWtbToAscii(t, keyIndex, stage);
-		//printf("finish game 1\n");
-		game_num2 = convertKifuToAscii(t, keyIndex, stage);
+		game_num1 = 0;
+		game_num2 = convertKifuToAscii(&t[game_num1], &keyIndex[game_num1 * PATTERN_NUM], stage);
 
-		printf("game:%d\n", game_num2);
+		printf("game:%d\n", game_num1 + game_num2);
 
 		// 評価テーブルの作成
-		Learning(t, keyIndex, game_num2, stage);
+		Learning(t, keyIndex, game_num1 + game_num2, stage);
 
+		if (g_AbortFlag)
+		{
+			printf("学習が正常に終了していないステージを検知しました。\n");
+			break;
+		}
 		stage++;
 		sum_score = 0;
 	}
@@ -2223,7 +2277,8 @@ int getKifuLine2(char buf[][512])
 {
 	char whorData[6800 * 5], file_name[64];
 	FILE *rfp;
-	int read_len, error, count = 0;
+	UINT64 read_len;
+	int error, count = 0;
 
 	sprintf_s(file_name, "kifu\\WTH_%d.wtb", 1976);
 	if ((error = fopen_s(&rfp, file_name, "rb")) != 0){
@@ -2330,6 +2385,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	culcEval();
 
 	//CulclationMpcValue();
+	//CulclationMpcValue_End();
 
 	//GenerateKifu( );
 

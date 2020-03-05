@@ -241,7 +241,7 @@ void edge_stability_init(void)
 * Args  : *bk        : 黒のビット列
 *         *wh        : 白のビット列
 ****************************************************************************/
-void Swap(UINT64 *bk, UINT64 *wh)
+void swap(UINT64 *bk, UINT64 *wh)
 {
 	UINT64 temp = *bk;
 	*bk = *wh;

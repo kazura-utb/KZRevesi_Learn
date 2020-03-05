@@ -9,6 +9,7 @@
 #include "learningTools.h"
 #include "bit64.h"
 #include "type.h"
+#include "board.h"
 #include "rev.h"
 #include "eval.h"
 #include "cpu.h"
@@ -18,6 +19,7 @@
 #define GAME_COUNT 1000
 
 int MPC_INFO_NUM = 0;
+int MPC_INFO_NUM_END = 0;
 int END_MPC_INFO_NUM = 0;
 int deep_level;
 
@@ -26,13 +28,6 @@ int sharrow_level[] =
 	1, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4
 };
 
-
-void swap(UINT64 *bk, UINT64 *wh)
-{
-	UINT64 temp = *bk;
-	*bk = *wh;
-	*wh = temp;
-}
 
 int RemainSt1ULL(UINT64 black, UINT64 white)
 {
@@ -55,7 +50,7 @@ int ConvertAsciiToNum(char* whorData, char* kifuData)
 	while (1)
 	{
 		while (kifuData[byteCounter] == ' '){
-			byteCounter++;
+			kifuData++;
 		}
 
 		/* 英字を読み込む */
@@ -133,18 +128,18 @@ int ConvertAsciiToNum(char* whorData, char* kifuData)
 			}
 		}
 
-		whorData[whorCounter++] = move;
+		whorData[byteCounter / 2] = move;
 
 		byteCounter += 2;
 		turn++;
 	}
 
-	if ((turn != 60 && turn != 59) || badFlag == true)
+	if (turn < 58 || badFlag == true)
 	{
 		return -1;
 	}
 
-	return 0;
+	return offset;
 
 }
 
@@ -154,17 +149,12 @@ void getKifuLine(char buf[][512])
 	char line[512];
 
 	FILE *rfp;
-	if (fopen_s(&rfp, "kifu\\01E4.gam.1.new", "rb") != 0){
+	if (fopen_s(&rfp, "kifu\\kifu.dat", "r") != 0){
 		return;
 	}
 
 	while (i < GAME_COUNT && fgets(line, 512, rfp) != NULL)
 	{
-		if (line[121] != ' ')
-		{
-			// 60手着手以外の棋譜はバグってる可能性大なのでスルー
-			continue;
-		}
 
 		if (rand() % 8 == 0)
 		{
@@ -231,7 +221,7 @@ void CulclationMpcValue()
 	char buf[1000][512];
 	UINT64 bk, wh, move, rev;
 
-	int sw_depth[] = { 1, 2, 1, 2, 3, 4, 3, 4, 5, 6, 5, 6, 7, 8, 7, 8, 9, 10, 9, 10, 11, 12 };
+	int sw_depth[] = { 1, 2, 1, 2, 3, 4, 3, 4, 5, 6, 7, 8, 7, 8, 7, 8, 9, 10, 9, 10, 11, 12 };
 	int i, j, byteCounter;
 	//int k;
 	int num, value_low, value_high;
@@ -296,7 +286,7 @@ void CulclationMpcValue()
 	cpuConfig.mpcFlag = TRUE;
 	cpuConfig.tableFlag = TRUE;
 
-	for (i = 0; i < 22; i++) {
+	for (i = 20; i < 22; i++) {
 		num = 0;
 		mean = 0;
 		var = 0;
@@ -317,7 +307,7 @@ void CulclationMpcValue()
 			for (byteCounter = 0;; byteCounter++) {
 
 				int empty = RemainSt1ULL(bk, wh);
-				if (empty >= (i + 3) + 4)
+				if (empty >= i + 3 + 10)
 				{
 					cpuConfig.color = color;
 					if (color == WHITE)
@@ -340,9 +330,227 @@ void CulclationMpcValue()
 					{
 						swap(&bk, &wh);
 					}
-
+					//HashClear(g_hash);
 				}
 				else
+				{
+					break;
+				}
+
+				move = buf[j][byteCounter];
+				if (move == -1)
+				{
+					printf("assert!!! move = -1!!\n");
+					continue;
+				}
+				if (color == BLACK)
+				{
+					rev = GetRev[move](bk, wh);
+					/* 黒パス？ */
+					if (rev == 0)
+					{
+						rev = GetRev[move](wh, bk);
+						/* 一応合法手になっているかのチェック */
+						if (rev == 0)
+						{
+							printf("assert!!! END GAME before culc have finished!!\n");
+							break;
+						}
+						bk ^= rev;
+						wh ^= ((1ULL << move) | rev);
+					}
+					else
+					{
+						bk ^= ((1ULL << move) | rev);
+						wh ^= rev;
+						color ^= 1;
+					}
+				}
+				else
+				{
+					rev = GetRev[move](wh, bk);
+					/* 白パス？ */
+					if (rev == 0)
+					{
+						rev = GetRev[move](bk, wh);
+						/* 一応合法手になっているかのチェック */
+						if (rev == 0)
+						{
+							printf("assert!!! END GAME before culc have finished!!\n");
+							break;
+						}
+						bk ^= ((1ULL << move) | rev);
+						wh ^= rev;
+					}
+					else
+					{
+						bk ^= rev;
+						wh ^= ((1ULL << move) | rev);
+						color ^= 1;
+					}
+				}
+				//byteCounter += 2;
+			}
+
+			if (j % 10 == 0){
+				div_mean = mean / (double)num;
+				div_var = 0;
+				for (int ii = 0; ii < num; ii++)
+				{
+					div_var += (elem[ii] - div_mean) * (elem[ii] - div_mean);
+				}
+				div_var = sqrt(div_var / (double)num);
+				printf("game:%d, prob depth:%d/%d, offset:%d, deviation:%d\n", j,
+					sw_depth[i], i + MPC_DEPTH_MIN, (int)(div_mean), (int)(div_var));
+
+			}
+			HashClear(g_hash);
+		}
+
+		div_mean = mean / (double)num;
+		div_var = 0;
+		for (int ii = 0; ii < num; ii++)
+		{
+			div_var += (elem[ii] - div_mean) * (elem[ii] - div_mean);
+		}
+		div_var = sqrt(div_var / (double)num);
+		mpcInfo[i].depth = sw_depth[i];
+		mpcInfo[i].offset = (int)div_mean;
+		mpcInfo[i].deviation = (int)div_var;
+		save_mpc(i + 1, mpcInfo, "src\\mpc.dat");
+	}
+
+	//culcExp(score_array, result_array);
+
+	printf("計算完了しました\n");
+
+}
+
+
+
+void CulclationMpcValue_End()
+{
+	char buf[1000][512];
+	UINT64 bk, wh, move, rev;
+	MPCINFO mpcInfo_end[19];
+	// depth = 6～24
+	int sw_depth[] = { 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7, 6, 7, 8 };
+	int i, j, byteCounter;
+	//int k;
+	int num, value_low, value_high;
+	int color;
+	int mean;
+	UINT64 var;
+	double div_mean, div_var;
+
+	int elem[60000];
+
+	// 定石データと評価テーブルのロード
+	BOOL result = LoadData();
+
+	if (result == FALSE)
+	{
+		printf("ERROR:評価テーブルの読み込みに失敗しました\r\n");
+		return;
+	}
+
+	/* pos番号-->指し手文字列変換テーブル */
+	char cordinate[4];
+	/* 指し手の座標表記変換用 */
+	for (int idx = 0; idx < 64; idx++)
+	{
+		sprintf_s(cordinate, "%c%d", idx / 8 + 'a', (idx % 8) + 1);
+		strcpy_s(g_cordinates_table[idx], 4, cordinate);
+	}
+
+	//save_mpc(0, MPCInfo);
+	//read_mpc_info(mpc_info, 5, "src\\mpc.dat");
+
+	//棋譜の読み込み処理
+	getKifuLine(buf);
+
+	int difficult_table[12];
+	difficult_table[0] = 12;
+	difficult_table[1] = 14;
+	difficult_table[2] = 16;
+	difficult_table[3] = 18;
+	difficult_table[4] = 18;
+	difficult_table[5] = 20;
+	difficult_table[6] = 20;
+	difficult_table[7] = 22;
+	difficult_table[8] = 22;
+	difficult_table[9] = 24;
+	difficult_table[10] = 24;
+	difficult_table[11] = 26;
+
+	//int window[2];
+	//int g, wld;
+
+	//int score_array[500], result_array[500];
+
+	CPUCONFIG cpuConfig = { 0 };
+
+	cpuConfig.bookFlag = 0;
+	cpuConfig.bookVariability = 0;
+	cpuConfig.casheSize = 1 << 22;
+	cpuConfig.color = BLACK;
+	cpuConfig.exactDepth = 0;
+	cpuConfig.winLossDepth = 0;
+	cpuConfig.mpcFlag = TRUE;
+	cpuConfig.tableFlag = TRUE;
+
+	MPC_INFO_NUM = 22;
+	read_mpc_info(mpcInfo, MPC_INFO_NUM, "src\\mpc.dat");
+
+	for (i = 19; i < 22; i++) {
+		num = 0;
+		mean = 0;
+		var = 0;
+		MPC_INFO_NUM_END = i;
+
+		//END_MPC_INFO_NUM = i;
+		printf("MPC計算中 %d / %d\r\n", i, 22);
+
+		// 500局の分散を計算
+		for (j = 0; j < GAME_COUNT; j++) {
+
+			color = BLACK;
+			bk = FIRST_BK;
+			wh = FIRST_WH;
+			byteCounter = 0;
+			// k = 1 は石差データが入っているため
+			for (byteCounter = 0;; byteCounter++) {
+
+				int empty = RemainSt1ULL(bk, wh);
+				if (empty == i + 6)
+				{
+					cpuConfig.color = color;
+					if (color == WHITE)
+					{
+						swap(&bk, &wh);
+					}
+
+					// shallow evaluation search
+					cpuConfig.searchDepth = sw_depth[i];
+					cpuConfig.exactDepth = 0;
+					GetMoveFromAI(bk, wh, empty, &cpuConfig); //low
+					value_low = g_evaluation;
+
+					// exact
+					cpuConfig.exactDepth = empty;
+					GetMoveFromAI(bk, wh, empty, &cpuConfig); // high
+					value_high = g_evaluation * EVAL_ONE_STONE;
+
+					elem[num] = (value_high - value_low); // 相加平均
+					mean += (value_high - value_low);
+					num++;
+					if (color == WHITE)
+					{
+						swap(&bk, &wh);
+					}
+					break;
+				}
+				else if (empty < i + 6)
 				{
 					break;
 				}
@@ -412,10 +620,7 @@ void CulclationMpcValue()
 				}
 				div_var = sqrt(div_var / (double)num);
 				printf("game:%d, prob depth:%d/%d, offset:%d, deviation:%d\n", j,
-					sw_depth[i], i + MPC_DEPTH_MIN, (int)(div_mean), (int)(div_var));
-				//printf("game:%d, prob depth:%d/%d, offset:%d, deviation:%d\n", j,
-				//	sharrow_level[i],
-				//	i + END_MPC_DEPTH_MIN, (int)(div_mean), (int)(div_var));
+					sw_depth[i], i + 6, (int)(div_mean), (int)(div_var));
 
 			}
 			HashClear(g_hash);
@@ -428,10 +633,10 @@ void CulclationMpcValue()
 			div_var += (elem[ii] - div_mean) * (elem[ii] - div_mean);
 		}
 		div_var = sqrt(div_var / (double)num);
-		mpcInfo[i].depth = sw_depth[i];
-		mpcInfo[i].offset = (int)div_mean;
-		mpcInfo[i].deviation = (int)div_var;
-		save_mpc(i + 1, mpcInfo, "src\\mpc.dat");
+		mpcInfo_end[i].depth = sw_depth[i];
+		mpcInfo_end[i].offset = (int)div_mean;
+		mpcInfo_end[i].deviation = (int)div_var;
+		save_mpc(i + 1, mpcInfo_end, "src\\mpc_end.dat");
 	}
 
 	//culcExp(score_array, result_array);

@@ -532,7 +532,7 @@ void StTreeFromLine(BooksNode *head, char *line, int eval)
 	UINT64 bk = BK_FIRST;
 	UINT64 wh = WH_FIRST;
 	UINT64 rev;
-	int line_len = strlen(line);
+	size_t line_len = strlen(line);
 	BooksNode *head_child;
 
 	while (depth < line_len)
@@ -600,7 +600,7 @@ void StructionBookTree(BooksNode *head, char *filename)
 	char *decode_sep, *line_data, *eval_str;
 	char *next_str = NULL, *next_line = NULL;
 	UCHAR* decodeData;
-	INT32 decodeDataLen;
+	size_t decodeDataLen;
 
 	decodeData = DecodeBookData(&decodeDataLen, filename);
 	if (decodeDataLen == -1)

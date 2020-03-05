@@ -10,16 +10,20 @@
 #include "cpu.h"
 #include "hash.h"
 #include "eval.h"
+#include "move.h"
+//#include "mt.h"
 
 int freeFlag = TRUE;
 
+UINT64 g_hashBoard[2][64];
+UINT64 g_colorHash[2];
 
 /*
 * ハッシュテーブルを解放する。
 * パラメータ：
 * hash_table 解放するハッシュテーブル
 */
-void hash_free(HashTable* hash_table){
+void hash_free(HashTable* hash_table) {
 	free(hash_table->entry);
 	hash_table->entry = NULL;
 }
@@ -27,7 +31,7 @@ void hash_free(HashTable* hash_table){
 
 static void HashFinalize(HashTable *hash)
 {
-	if (freeFlag == TRUE){
+	if (freeFlag == TRUE) {
 		return;
 	}
 	if (hash->entry) {
@@ -97,6 +101,8 @@ HashInfo *HashGet(HashTable *hash, int key, UINT64 bk, UINT64 wh)
 
 }
 
+
+
 void HashUpdate(
 	HashTable* hash_table,
 	UINT32 key,
@@ -105,62 +111,149 @@ void HashUpdate(
 	INT32 alpha,
 	INT32 beta,
 	INT32 score,
-	INT32 empty,
-	INT8 move,
+	INT32 depth,
+	INT32 move,
+	INT32 selectivity,
 	INT32 inf_score)
 {
 	HashEntry *hash_entry;
 	HashInfo *deepest, *newest;
 
 	if (!g_tableFlag || hash_table == NULL) return;
-
-	// ハッシュエントリのアドレス
 	hash_entry = &(hash_table->entry[key]);
 	deepest = &(hash_entry->deepest);
 	newest = &(hash_entry->newest);
 
-	/* deepestエントリの更新を試みる */
-	if (deepest->bk == bk && deepest->wh == wh)
+	if (score >= beta)
 	{
-		if (score < beta && score < deepest->upper)
-			deepest->upper = score;
-		if (score > alpha && score > deepest->lower)
+		// [score, +INF]
+		// try to update first hash
+		if (deepest->bk == bk && deepest->wh == wh)
+		{
+			deepest->bestmove = move;
+			deepest->depth = depth;
 			deepest->lower = score;
-		deepest->bestmove = move;
-		/* newestエントリの更新を試みる */
-	}
-	else if (newest->bk == bk && newest->wh == wh)
-	{
-		if (score < beta && score < newest->upper)
-			newest->upper = score;
-		if (score > alpha && score > newest->lower)
+			deepest->upper = inf_score;
+			deepest->selectivity = selectivity;
+		}
+		// try to update next hash
+		else if (newest->bk == bk && newest->wh == wh)
+		{
+			newest->bestmove = move;
+			newest->depth = depth;
 			newest->lower = score;
-		newest->bestmove = move;
-		/* それ以外の場合でdeepestエントリの更新を試みる */
+			newest->upper = inf_score;
+			newest->selectivity = selectivity;
+		}
+		// try to entry first hash
+		else if (key != g_key)
+		{
+			// deepest already entried?
+			deepest->bk = bk;
+			deepest->wh = wh;
+			deepest->bestmove = move;
+			deepest->depth = depth;
+			deepest->lower = score;
+			deepest->upper = inf_score;
+			deepest->selectivity = selectivity;
+		}
+		else
+		{
+			// deepest already entried?
+			newest->bk = bk;
+			newest->wh = wh;
+			newest->bestmove = move;
+			newest->depth = depth;
+			newest->lower = score;
+			newest->upper = inf_score;
+			newest->selectivity = selectivity;
+		}
 	}
-	else if (deepest->empty < empty)
+	else if (score > alpha)
 	{
-		if (newest->empty < deepest->empty) *newest = *deepest;
-		deepest->bk = bk;
-		deepest->wh = wh;
-		deepest->empty = empty;
-		deepest->lower = -inf_score;
-		deepest->upper = inf_score;
-		if (score < beta) deepest->upper = score;
-		if (score > alpha) deepest->lower = score;
-		deepest->bestmove = move;
-		/* それ以外の場合でnewestエントリを更新する */
+		// [score, score]
+		if (deepest->bk == bk && deepest->wh == wh)
+		{
+			deepest->bestmove = move;
+			deepest->depth = depth;
+			deepest->lower = score;
+			deepest->upper = score;
+			deepest->selectivity = selectivity;
+		}
+		// try to update next hash
+		else if (newest->bk == bk && newest->wh == wh)
+		{
+			newest->bestmove = move;
+			newest->depth = depth;
+			newest->lower = score;
+			newest->upper = score;
+			newest->selectivity = selectivity;
+		}
+		// try to entry first hash
+		else if (key != g_key)
+		{
+			deepest->bk = bk;
+			deepest->wh = wh;
+			deepest->bestmove = move;
+			deepest->depth = depth;
+			deepest->lower = score;
+			deepest->upper = score;
+			deepest->selectivity = selectivity;
+		}
+		else
+		{
+			// deepest already entried?
+			newest->bk = bk;
+			newest->wh = wh;
+			newest->bestmove = move;
+			newest->depth = depth;
+			newest->lower = score;
+			newest->upper = score;
+			newest->selectivity = selectivity;
+		}
 	}
-	else if (newest->empty < empty)
+	else
 	{
-		newest->bk = bk;
-		newest->wh = wh;
-		newest->empty = empty;
-		newest->lower = -inf_score;
-		newest->upper = inf_score;
-		if (score < beta) newest->upper = score;
-		if (score > alpha) newest->lower = score;
-		newest->bestmove = move;
+		// [-INF, score]
+		if (deepest->bk == bk && deepest->wh == wh)
+		{
+			deepest->bestmove = move;
+			deepest->depth = depth;
+			deepest->lower = -inf_score;
+			deepest->upper = score;
+			deepest->selectivity = selectivity;
+		}
+		// try to update next hash
+		else if (newest->bk == bk && newest->wh == wh)
+		{
+			newest->bestmove = move;
+			newest->depth = depth;
+			newest->lower = -inf_score;
+			newest->upper = score;
+			newest->selectivity = selectivity;
+		}
+		// try to entry first hash
+		else if (key != g_key)
+		{
+			deepest->bk = bk;
+			deepest->wh = wh;
+			deepest->bestmove = move;
+			deepest->depth = depth;
+			deepest->lower = -inf_score;
+			deepest->upper = score;
+			deepest->selectivity = selectivity;
+		}
+		else
+		{
+			// deepest already entried?
+			newest->bk = bk;
+			newest->wh = wh;
+			newest->bestmove = move;
+			newest->depth = depth;
+			newest->lower = -inf_score;
+			newest->upper = score;
+			newest->selectivity = selectivity;
+		}
 	}
 }
 
@@ -172,6 +265,8 @@ void FixTableToMiddle(HashTable *hash)
 		hash->entry[i].newest.lower = NEGAMIN;
 		hash->entry[i].deepest.upper = NEGAMAX;
 		hash->entry[i].newest.upper = NEGAMAX;
+		hash->entry[i].deepest.selectivity = 0;
+		hash->entry[i].newest.selectivity = 0;
 	}
 
 }
@@ -180,10 +275,12 @@ void FixTableToWinLoss(HashTable *hash)
 {
 	for (int i = 0; i < hash->size; i++)
 	{
-		hash->entry[i].deepest.lower = -INF_SCORE;
-		hash->entry[i].newest.lower = -INF_SCORE;
-		hash->entry[i].deepest.upper = INF_SCORE;
-		hash->entry[i].newest.upper = INF_SCORE;
+		hash->entry[i].deepest.lower = -(WIN + 1);
+		hash->entry[i].newest.lower = -(WIN + 1);
+		hash->entry[i].deepest.upper = (WIN + 1);
+		hash->entry[i].newest.upper = (WIN + 1);
+		hash->entry[i].deepest.selectivity = 0;
+		hash->entry[i].newest.selectivity = 0;
 	}
 }
 
@@ -196,7 +293,41 @@ void FixTableToExact(HashTable *hash)
 		hash->entry[i].newest.lower = -INF_SCORE;
 		hash->entry[i].deepest.upper = INF_SCORE;
 		hash->entry[i].newest.upper = INF_SCORE;
-		hash->entry[i].deepest.empty = 59;
-		hash->entry[i].newest.empty = 59;
+		hash->entry[i].deepest.depth = -1;
+		hash->entry[i].newest.depth = -1;
+		hash->entry[i].deepest.selectivity = 0;
+		hash->entry[i].newest.selectivity = 0;
 	}
+}
+
+void InitHashBoard()
+{
+#if 0 
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 64; j++)
+		{
+			g_hashBoard[i][j] = (((UINT64)genrand_int32()) << 32) | genrand_int32();
+		}
+	}
+
+	g_colorHash[0] = (((UINT64)genrand_int32()) << 32) | genrand_int32();
+	g_colorHash[1] = (((UINT64)genrand_int32()) << 32) | genrand_int32();
+#endif
+}
+
+UINT32 GenerateHashValue(UINT64 bk, UINT64 wh, UINT32 color)
+{
+	UINT64 hashValue = 0;
+
+	for (int j = 0; j < 64; j++)
+	{
+		hashValue ^= g_hashBoard[0][j] * ((bk & (1ULL << j)) >> j);
+		hashValue ^= g_hashBoard[1][j] * ((wh & (1ULL << j)) >> j);
+	}
+
+	hashValue ^= g_colorHash[color];
+
+	return (UINT32)(hashValue % g_casheSize);
+
 }

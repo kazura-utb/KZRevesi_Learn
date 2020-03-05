@@ -87,7 +87,7 @@ KZ_EXPORT UINT64 KZ_GetCpuMove(UINT64 bk, UINT64 wh, CPUCONFIG *cpuConfig)
 	// カウントリセット(カウントリセットは以降の処理との順番入れ替え×)
 	g_countNode = 0;
 	// CPUメッセージ初期化
-	g_set_message_funcptr("");
+	//g_set_message_funcptr("");
 
 	emptyNum = CountBit(~(bk | wh));
 	turn = 60 - emptyNum;
@@ -188,7 +188,7 @@ KZ_EXPORT UINT32 KZ_CountBit(UINT64 bit)
 ****************************************************************************/
 KZ_EXPORT void KZ_EntryFunction(SetMessageToGUI ptr)
 {
-	g_set_message_funcptr = ptr;
+	//g_set_message_funcptr = ptr;
 }
 
 /***************************************************************************

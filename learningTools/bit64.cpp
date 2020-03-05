@@ -3,7 +3,6 @@
 * Brief : ‹Ç–Ê‚Æ’èÎƒf[ƒ^‚ğÆ‚ç‚µ‡‚í‚¹‚Ä’…è
 * Date  : 2016/02/01
 ****************************************************************************/
-
 #include "stdafx.h"
 #include <intrin.h>
 #include "bit64.h"
@@ -38,11 +37,10 @@ const unsigned long long X_TO_BIT[] = {
 ****************************************************************************/
 INT32 CountBit(UINT64 bit)
 {
-	int l_moves = bit & 0x00000000FFFFFFFF;
-	int h_moves = (bit & 0xFFFFFFFF00000000) >> 32;
+	///int l_moves = bit & 0x00000000FFFFFFFF;
+	///int h_moves = (bit & 0xFFFFFFFF00000000) >> 32;
 
-	int count = _mm_popcnt_u32(l_moves);
-	count += _mm_popcnt_u32(h_moves);
+	int count = _mm_popcnt_u64(bit);
 
 	return count;
 }

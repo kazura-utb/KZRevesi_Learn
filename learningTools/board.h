@@ -39,8 +39,8 @@ int get_stability(const unsigned long long P, const unsigned long long O);
 int get_edge_stability(const unsigned long long P, const unsigned long long O);
 void create_quad_parity(UINT32 *q_parity, UINT64 blank);
 void InitIndexBoard(UINT64 bk, UINT64 wh);
-void Swap(UINT64 *bk, UINT64 *wh);
 void create_empty_list(EmptyList *start, UINT64 blank);
+void swap(UINT64 *bk, UINT64 *wh);
 
 UINT64 rotate_90(UINT64 board);
 UINT64 rotate_180(UINT64 board);
